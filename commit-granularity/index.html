@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="결과만 받으면 읽을 수 없다 — 커밋 단위와 이해에 관한 애니메이션">
+<meta property="og:title" content="결과만 받으면 읽을 수 없다">
+<meta property="og:description" content="네 개의 커밋을 내비게이션 안내에 빗댄 애니메이션. 과정을 봐야 결과가 읽힌다.">
+<meta property="og:image" content="https://msbaek.github.io/talk-visuals/commit-granularity/process-vs-result.gif">
+<style>*{margin:0;padding:0;box-sizing:border-box}</style>
+</head>
+<body>
+<title>결과만 받으면 읽을 수 없다 — 커밋 단위와 이해</title>
+<style>
+  :root {
+    --ground: #0B1420;
+    --panel: #111E2E;
+    --line: #22334A;
+    --ink: #ECF4FC;
+    --sub: #8FA3B8;
+    --cyan: #29D6FF;
+    --green: #2BE08A;
+    --pink: #FF6B9D;
+    --sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+            "Noto Sans KR", "Malgun Gothic", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  :root[data-theme="light"] {
+    --ground: #EEF2F7;
+    --panel: #FFFFFF;
+    --line: #D3DCE6;
+    --ink: #14202E;
+    --sub: #56697E;
+    --cyan: #0079A8;
+    --green: #0F8A56;
+    --pink: #C8306B;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --ground: #EEF2F7;
+      --panel: #FFFFFF;
+      --line: #D3DCE6;
+      --ink: #14202E;
+      --sub: #56697E;
+      --cyan: #0079A8;
+      --green: #0F8A56;
+      --pink: #C8306B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0B1420;
+    --panel: #111E2E;
+    --line: #22334A;
+    --ink: #ECF4FC;
+    --sub: #8FA3B8;
+    --cyan: #29D6FF;
+    --green: #2BE08A;
+    --pink: #FF6B9D;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 6vw, 5rem) clamp(1.1rem, 4vw, 2rem) 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2rem, 5vw, 3.25rem);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 0.9rem;
+  }
+  h1 {
+    font-size: clamp(1.85rem, 5vw, 3rem);
+    font-weight: 750;
+    letter-spacing: -0.028em;
+    line-height: 1.22;
+    text-wrap: balance;
+    margin-bottom: 1rem;
+  }
+  h1 .dim { color: var(--sub); font-weight: 600; }
+  .lede {
+    font-size: clamp(1rem, 2.1vw, 1.15rem);
+    color: var(--sub);
+    max-width: 42em;
+  }
+
+  figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: clamp(0.5rem, 2vw, 1rem);
+    overflow-x: auto;
+  }
+  .stage img {
+    display: block;
+    width: 100%;
+    max-width: 920px;
+    height: auto;
+    margin: 0 auto;
+  }
+  .figbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    color: var(--sub);
+  }
+  button {
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    color: var(--cyan);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--cyan); }
+  button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+  .acts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .act {
+    background: var(--panel);
+    padding: 1.4rem 1.3rem 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .act .tag {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .act h2 { font-size: 1.06rem; font-weight: 680; letter-spacing: -0.01em; }
+  .act p { font-size: 0.93rem; color: var(--sub); }
+  .act--miss .tag { color: var(--pink); }
+  .act--walk .tag { color: var(--cyan); }
+  .act--read .tag { color: var(--green); }
+
+  .thesis {
+    border-left: 3px solid var(--green);
+    padding: 0.2rem 0 0.2rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .thesis strong {
+    font-size: clamp(1.1rem, 2.6vw, 1.4rem);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  .thesis span { color: var(--sub); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 1.4rem;
+    font-family: var(--mono);
+    font-size: 0.73rem;
+    letter-spacing: 0.05em;
+    color: var(--sub);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">commit granularity · 딸깍의 시대</p>
+    <h1>결과만 받으면 읽을 수 없다.<br><span class="dim">과정을 보면 같은 결과가 읽힌다.</span></h1>
+    <p class="lede">
+      네 번의 커밋을 자동차 내비게이션 안내에 빗댄 그림입니다.
+      같은 그림을 두 번 보여줍니다 — 과정을 보기 전에 한 번, 보고 나서 한 번.
+      달라지는 것은 그림이 아니라 보는 사람입니다.
+    </p>
+  </header>
+
+  <figure>
+    <div class="stage">
+      <img id="clip" src="process-vs-result.gif" alt="네 개의 커밋을 내비게이션 안내로 표현한 애니메이션. 겹친 결과 화면, 하나씩 보는 과정, 다시 보는 결과 순으로 재생된다.">
+    </div>
+    <div class="figbar">
+      <span>14초 · 반복 재생</span>
+      <button type="button" id="replay">처음부터 다시 재생</button>
+    </div>
+  </figure>
+
+  <div class="acts">
+    <section class="act act--miss">
+      <p class="tag">결과만</p>
+      <h2>네 결정이 한 덩어리로</h2>
+      <p>좌회전·직진·우회전·유턴이 한 화면에 겹칩니다. 어디서 꺾었는지, 왜 되돌아왔는지 짚을 수 없습니다.</p>
+    </section>
+    <section class="act act--walk">
+      <p class="tag">과정</p>
+      <h2>한 번에 하나씩, 이유와 함께</h2>
+      <p>같은 네 결정을 차례로 봅니다. 앞 단계를 알기 때문에 다음 단계가 예측됩니다.</p>
+    </section>
+    <section class="act act--read">
+      <p class="tag">다시 결과</p>
+      <h2>같은 그림이 읽힌다</h2>
+      <p>1막과 완전히 같은 그림인데 이제 첫 수부터 마지막 수까지 따라갑니다. 그림이 바뀐 게 아닙니다.</p>
+    </section>
+  </div>
+
+  <div class="thesis">
+    <strong>에이전트가 만든 코드도 마찬가지입니다.</strong>
+    <span>결과 한 덩어리를 받으면 리뷰할 수 없습니다. 중간 단계를 이해해야 최종 결과를 이해할 수 있습니다 — 작게 일하고 작게 커밋해야 하는 이유입니다.</span>
+  </div>
+
+  <footer>
+    <span>딸깍의 시대 · 슬라이드 15–19</span>
+    <span>PIL로 생성 · build_nav.py</span>
+  </footer>
+</div>
+
+<script>
+  document.getElementById("replay").addEventListener("click", function () {
+    var img = document.getElementById("clip");
+    var src = img.src;
+    img.src = "";
+    img.src = src;
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>발표 시각물 — 백명석</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --ground: #0B1420; --panel: #111E2E; --line: #22334A;
+    --ink: #ECF4FC; --sub: #8FA3B8; --cyan: #29D6FF;
+    --sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+            "Noto Sans KR", "Malgun Gothic", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --ground: #EEF2F7; --panel: #FFFFFF; --line: #D3DCE6;
+      --ink: #14202E; --sub: #56697E; --cyan: #0079A8;
+    }
+  }
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 46rem; margin: 0 auto;
+    padding: clamp(3rem, 8vw, 6rem) 1.4rem 5rem;
+    display: flex; flex-direction: column; gap: 2.5rem;
+  }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 0.8rem;
+  }
+  h1 { font-size: clamp(1.6rem, 4.5vw, 2.2rem); font-weight: 720; letter-spacing: -0.025em; }
+  .lede { color: var(--sub); margin-top: 0.7rem; }
+  a.card {
+    display: flex; flex-direction: column; gap: 0.4rem;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 3px;
+    padding: 1.4rem 1.4rem 1.6rem; text-decoration: none; color: inherit;
+  }
+  a.card:hover { border-color: var(--cyan); }
+  a.card:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  a.card .kicker {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--cyan);
+  }
+  a.card h2 { font-size: 1.15rem; font-weight: 680; letter-spacing: -0.01em; }
+  a.card p { font-size: 0.93rem; color: var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">talk visuals</p>
+    <h1>발표에서 쓰는 그림들</h1>
+    <p class="lede">강연·글에서 설명을 대신하는 시각물을 모아둡니다. 링크만 있으면 누구나 볼 수 있습니다.</p>
+  </header>
+
+  <a class="card" href="commit-granularity/">
+    <span class="kicker">커밋 단위 · 딸깍의 시대</span>
+    <h2>결과만 받으면 읽을 수 없다</h2>
+    <p>네 번의 커밋을 내비게이션 안내에 빗댄 애니메이션. 같은 그림을 과정 전후로 두 번 보여줍니다.</p>
+  </a>
+</div>
+</body>
+</html>
