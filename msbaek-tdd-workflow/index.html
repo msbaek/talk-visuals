@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>msbaek-tdd 오케스트레이터 — 전체 절차</title>
+<meta name="description" content="msbaek-tdd 플러그인 1.15.0 기준 전체 워크플로우 지도 — /tdd 진입부터 tdd-plan, Walking Skeleton, RGB 사이클, 독립 진입점까지.">
+<meta property="og:title" content="msbaek-tdd 오케스트레이터 — 전체 절차">
+<meta property="og:description" content="msbaek-tdd 플러그인 1.15.0 기준 전체 워크플로우 지도.">
+<meta property="og:type" content="website">
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-alt: #eceef2;
+    --text: #1b1f24;
+    --text-muted: #5b6472;
+    --border: #d9dee4;
+    --code-bg: #edeff3;
+    --accent: #a8660d;
+    --accent-bg: #fbf0dd;
+    --red: #a8402f;
+    --red-bg: #f8e6e2;
+    --green: #2f6b4b;
+    --green-bg: #e2efe7;
+    --blue: #2c5c92;
+    --blue-bg: #e3ecf5;
+    --shadow: 0 1px 2px rgba(20, 24, 30, 0.04), 0 8px 24px rgba(20, 24, 30, 0.05);
+    --font-sans: -apple-system, BlinkMacSystemFont, "Pretendard Variable", "Apple SD Gothic Neo",
+      "Malgun Gothic", "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c;
+      --surface: #1b1f26;
+      --surface-alt: #20242c;
+      --text: #e8eaed;
+      --text-muted: #97a0af;
+      --border: #2c313b;
+      --code-bg: #232833;
+      --accent: #e0aa4e;
+      --accent-bg: #362a13;
+      --red: #e0897a;
+      --red-bg: #3a2320;
+      --green: #85cba7;
+      --green-bg: #1f342a;
+      --blue: #85b0e2;
+      --blue-bg: #1f2d3f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #14171c;
+    --surface: #1b1f26;
+    --surface-alt: #20242c;
+    --text: #e8eaed;
+    --text-muted: #97a0af;
+    --border: #2c313b;
+    --code-bg: #232833;
+    --accent: #e0aa4e;
+    --accent-bg: #362a13;
+    --red: #e0897a;
+    --red-bg: #3a2320;
+    --green: #85cba7;
+    --green-bg: #1f342a;
+    --blue: #85b0e2;
+    --blue-bg: #1f2d3f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    padding: 56px 24px 96px;
+  }
+
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 38px);
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 8px 0 6px;
+  }
+
+  h2 {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  p { margin: 0; }
+
+  .lede {
+    color: var(--text-muted);
+    font-size: 16px;
+    max-width: 62ch;
+  }
+
+  code, .cmd {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--code-bg);
+    padding: 0.12em 0.45em;
+    border-radius: 4px;
+  }
+
+  section { display: flex; flex-direction: column; gap: 18px; }
+
+  .section-head { display: flex; flex-direction: column; gap: 6px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ---- 변경 요약 콜아웃 ---- */
+  .status-card {
+    background: var(--accent-bg);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+    border-radius: 10px;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .status-card .eyebrow { color: var(--accent); }
+  .status-card p { color: var(--text); font-size: 14.5px; }
+  .delta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .delta-list li {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 14px;
+    align-items: baseline;
+    font-size: 13.5px;
+  }
+  @media (max-width: 560px) {
+    .delta-list li { grid-template-columns: 1fr; gap: 2px; }
+  }
+  .delta-ver {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .delta-list s { color: var(--text-muted); text-decoration-thickness: 1px; }
+
+  /* ---- 터미널 프롬프트 ---- */
+  .terminal {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    overflow-x: auto;
+  }
+  .terminal .prompt-mark { color: var(--text-muted); }
+  .terminal .arg-type { color: var(--blue); }
+  .terminal .arg-fqcn { color: var(--text-muted); }
+
+  /* ---- fork svg ---- */
+  .fork-svg { width: 100%; height: auto; display: block; }
+  .fork-svg text { font-family: var(--font-mono); font-size: 12px; fill: currentColor; }
+  .fork-svg .muted { fill: var(--text-muted); }
+
+  /* ---- 경로 카드 2단 ---- */
+  .path-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 640px) { .path-grid { grid-template-columns: 1fr; } }
+
+  .path-card { display: flex; flex-direction: column; gap: 12px; }
+  .path-card .tag {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 4px;
+  }
+  .tag.general { background: var(--blue-bg); color: var(--blue); }
+  .tag.web { background: var(--accent-bg); color: var(--accent); }
+
+  .chain { display: flex; flex-direction: column; }
+  .chain-item {
+    display: flex;
+    gap: 12px;
+    padding: 9px 0;
+    border-left: 2px solid var(--border);
+    margin-left: 11px;
+    padding-left: 18px;
+    position: relative;
+  }
+  .chain-item::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 14px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--text-muted);
+  }
+  .chain-item:last-child { border-left: 2px solid transparent; }
+  .chain-item.extra::before { border-color: var(--accent); }
+  .chain-num { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); min-width: 20px; }
+  .chain-label { font-size: 14px; }
+  .chain-label .sub { color: var(--text-muted); font-size: 12.5px; display: block; margin-top: 2px; }
+
+  .note {
+    font-size: 13px;
+    color: var(--text-muted);
+    border-left: 3px solid var(--border);
+    padding-left: 12px;
+  }
+
+  /* ---- 갈림/게이트 ---- */
+  .gate-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .gate-row .arrow { color: var(--text-muted); font-family: var(--font-mono); }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface-alt);
+  }
+  .chip.required { border-color: var(--green); color: var(--green); font-weight: 700; }
+
+  /* ---- 두 축 표 (real / thinnest) ---- */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.axis { font-weight: 700; white-space: nowrap; }
+  td.axis .real { color: var(--green); }
+  td.axis .thin { color: var(--blue); }
+
+  /* ---- rgb / feature 비교 ---- */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 640px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-col { display: flex; flex-direction: column; gap: 10px; }
+  .compare-col h3 code { background: none; padding: 0; font-size: 1em; }
+  .compare-col ul { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
+  .compare-col li::marker { color: var(--text-muted); }
+
+  .checkpoint-svg { width: 100%; height: auto; display: block; margin-top: 4px; }
+  .checkpoint-svg text { font-family: var(--font-mono); fill: currentColor; }
+  .checkpoint-svg .muted { fill: var(--text-muted); }
+  .checkpoint-svg .wait-dot { fill: var(--accent); }
+  .checkpoint-svg .pass-dot { fill: var(--text-muted); }
+
+  /* ---- rgb cycle svg ---- */
+  .rgb-cycle-wrap { display: flex; justify-content: center; }
+  .rgb-cycle-svg { width: 100%; max-width: 560px; height: auto; }
+  .rgb-cycle-svg text { font-family: var(--font-mono); fill: currentColor; }
+  .rgb-cycle-svg .muted { fill: var(--text-muted); }
+  .rgb-cycle-svg .lbl-red { fill: var(--red); }
+  .rgb-cycle-svg .lbl-green { fill: var(--green); }
+  .rgb-cycle-svg .lbl-blue { fill: var(--blue); }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  figcaption { font-size: 12.5px; color: var(--text-muted); }
+
+  /* ---- 독립 진입점 ---- */
+  .standalone {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .standalone-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 760px) { .standalone-grid { grid-template-columns: 1fr; } }
+  .standalone-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .standalone-item .cmd { align-self: flex-start; }
+  .standalone-item p { font-size: 13px; color: var(--text-muted); }
+
+  /* ---- 태그 클라우드 ---- */
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag-cloud span {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  footer {
+    max-width: 920px;
+    margin: 0 auto;
+    padding-top: 8px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+  }
+</style>
+</head>
+<body>
+
+<main>
+
+  <section>
+    <p class="eyebrow">PLUGIN WORKFLOW MAP · msbaek-tdd 1.15.0</p>
+    <h1>오케스트레이터가 짜는 전체 절차</h1>
+    <p class="lede">
+      진입점 <code>/tdd</code>에서 시작해 계획(<code>tdd-plan</code>) → 구현(<code>tdd-rgb</code> /
+      <code>tdd-feature</code>)으로 이어지는 메인 파이프라인과, 그 바깥에서 독립적으로 쓰이는
+      레거시·정리 스킬들의 전체 배치.
+    </p>
+  </section>
+
+  <div class="status-card">
+    <p class="eyebrow">1.12.0 이후 바뀐 것</p>
+    <ul class="delta-list">
+      <li>
+        <span class="delta-ver">1.14.0</span>
+        <span>Walking Skeleton이 <s>Fake Repository + 하드코딩</s> → <strong>진짜 JPA + docker MySQL</strong>로.
+          인수 계층은 <s>High Level Test(JUnit)</s> → <strong>Cucumber <code>.feature</code></strong> 하나로 일원화(9단계 → 8단계).</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.14.1</span>
+        <span>TDD 유형 <s>web-usecase</s> → <strong>web-app</strong> — <code>general</code>과 같은 축(무엇을 만드는가)에서 대조되도록.</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.15.0</span>
+        <span>기어별 스킬 라우팅 명시. <code>tdd-feature</code>의 Phase B가 <strong>feature 범위의 high 기어</strong>임을 선언하고,
+          high 안전장치 3종(폭발 반경 점검·시작 커밋 기록·적대적 리뷰)을 동일 적용.</span>
+      </li>
+    </ul>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <h2>진입 — <code>/tdd</code></h2>
+      <p class="lede">FQCN에서 패키지·클래스명을 파싱해 템플릿 문서와 빈 테스트 클래스를 만들고, 유형에 따라 절차의 길이가 갈린다.</p>
+    </div>
+
+    <div class="card">
+      <div class="terminal">
+        <span class="prompt-mark">$</span>
+        <span>/tdd</span>
+        <span class="arg-type">&lt;general|web-app&gt;</span>
+        <span class="arg-fqcn">com.example.basket.CreateShoppingBasket</span>
+      </div>
+    </div>
+
+    <figure>
+      <svg class="fork-svg" viewBox="0 0 720 90" role="img"
+           aria-label="/tdd 명령이 general과 web-app 두 경로로 갈라지는 다이어그램">
+        <defs>
+          <marker id="arrow-fork" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+          </marker>
+        </defs>
+        <line x1="360" y1="8" x2="360" y2="26" stroke="currentColor" stroke-width="1.5" />
+        <line x1="360" y1="26" x2="150" y2="26" stroke="currentColor" stroke-width="1.5" />
+        <line x1="360" y1="26" x2="570" y2="26" stroke="currentColor" stroke-width="1.5" />
+        <line x1="150" y1="26" x2="150" y2="66" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-fork)" />
+        <line x1="570" y1="26" x2="570" y2="66" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-fork)" />
+        <text x="150" y="46" text-anchor="middle" class="muted">general</text>
+        <text x="570" y="46" text-anchor="middle" class="muted">web-app</text>
+        <text x="150" y="82" text-anchor="middle">4단계 템플릿</text>
+        <text x="570" y="82" text-anchor="middle">8단계 템플릿</text>
+      </svg>
+      <figcaption>같은 명령이 유형 인자 하나로 절차 길이 자체를 바꾼다 — general은 계산·상태 도메인, web-app은 인수 테스트 셋업과 Walking Skeleton까지 포함한다.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2><code>tdd-plan</code> — 계획 단계 (인터랙티브)</h2>
+      <p class="lede">단계마다 사용자 승인 후 커밋. <code>Gherkin</code> 이후 지점에서 두 유형이 갈라지고 다시 합치지 않는다.</p>
+    </div>
+
+    <div class="card path-grid">
+      <div class="path-card">
+        <span class="tag general">general</span>
+        <div class="chain">
+          <div class="chain-item"><span class="chain-num">1</span><span class="chain-label">요구사항<span class="sub">도메인 규칙(0층) + User Story, 조건부 Use Case</span></span></div>
+          <div class="chain-item"><span class="chain-num">2</span><span class="chain-label">Gherkin Scenario<span class="sub">programmer test 계층</span></span></div>
+          <div class="chain-item"><span class="chain-num">3</span><span class="chain-label">Unit Test 목록<span class="sub">Gherkin에 없는 세밀 분기</span></span></div>
+          <div class="chain-item"><span class="chain-num">4</span><span class="chain-label">테스트 구현 (RGB)</span></div>
+        </div>
+      </div>
+      <div class="path-card">
+        <span class="tag web">web-app</span>
+        <div class="chain">
+          <div class="chain-item"><span class="chain-num">1</span><span class="chain-label">요구사항<span class="sub">동일 + Use Case 확장절 비중↑</span></span></div>
+          <div class="chain-item"><span class="chain-num">2</span><span class="chain-label">Gherkin Scenario</span></div>
+          <div class="chain-item extra"><span class="chain-num">3</span><span class="chain-label">인수 테스트 셋업 <span class="sub">.feature + Runner + Protocol Driver, 미구현은 @pending</span></span></div>
+          <div class="chain-item extra"><span class="chain-num">4</span><span class="chain-label">Unit Test 목록</span></div>
+          <div class="chain-item extra"><span class="chain-num">5</span><span class="chain-label">Walking Skeleton <span class="sub">HTTP → 앱 → 진짜 DB(docker MySQL) 관통, 로직 없음</span></span></div>
+          <div class="chain-item extra"><span class="chain-num">6</span><span class="chain-label">테스트 구현 (RGB) <span class="sub">각 Green이 자기 시나리오 @pending 해제</span></span></div>
+          <div class="chain-item extra"><span class="chain-num">7</span><span class="chain-label">JPA Repository 완성 <span class="sub">계약 테스트로 InMemory와 동등성 검증</span></span></div>
+          <div class="chain-item extra"><span class="chain-num">8</span><span class="chain-label">DSL 개선 <span class="sub">Steps · Protocol Driver · Test Data Builder</span></span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">점으로 표시된 단계(3~8)가 web-app에만 있는 구간. general은 3단계에서 곧장 RGB로 들어간다. 이전의 “High Level Test 활성화” 단계는 사라졌다 — 각 Green이 시나리오 태그를 해제하므로 마지막에 일괄 활성화할 대상이 없다.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Walking Skeleton — 두 축을 섞지 않는다</h2>
+      <p class="lede">GOOS의 정의는 “자동으로 빌드·배포·테스트할 수 있는 <strong>실제 기능</strong>의 <strong>가장 얇은</strong> 슬라이스”다. real과 “비즈니스 로직 제외”는 충돌하지 않는다 — 축이 다르다.</p>
+    </div>
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>축</th><th>질문</th><th>기준</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="axis"><span class="real">real</span></td>
+            <td>실행 경로가 진짜인가?</td>
+            <td>fake · 하드코딩 금지 — 실제 HTTP → 실제 앱 → <strong>실제 DB(docker MySQL, Testcontainers)</strong> 관통</td>
+          </tr>
+          <tr>
+            <td class="axis"><span class="thin">thinnest</span></td>
+            <td>기능이 얇은가?</td>
+            <td>비즈니스 규칙(합산·할인·검증) 제외 — “너무 단순해서 흥미롭지 않을 정도”의 저장·조회 pass-through</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      In-Memory 저장소는 skeleton용이 아니라 <strong>RGB 사이클의 빠른 루프용</strong>이다.
+      전환은 주석 토글이 아니라 profile로 — <code>@Profile("inMemory")</code>는 Map 기반,
+      <code>@Profile("!inMemory")</code>는 JPA(<code>local</code>·<code>dev</code>·<code>stage</code>·<code>prod</code> 전부).
+      진짜 DB가 기본이고 in-memory가 명시적 예외라는 원칙이 profile 구조에 새겨진다.
+      인수 테스트는 항상 <code>local</code>에서 돈다.
+    </p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>plan 완료 후 갈림</h2>
+    </div>
+    <div class="card gate-row">
+      <span class="chip">tdd-plan 완료</span>
+      <span class="arrow">→</span>
+      <span class="chip required">web-app: cucumber-acceptance <span style="opacity:.7">(필수)</span></span>
+      <span class="arrow">/</span>
+      <span class="chip">general: 선택</span>
+    </div>
+    <p class="note">
+      <code>cucumber-acceptance</code>는 §2 Gherkin을 그대로 <code>.feature</code> + Four Layer(Steps→Protocol Driver→SUT)로 셋업하고,
+      미구현 시나리오는 <code>@pending</code>으로 표시한다. <strong>web-app에서는 이것이 인수 계층이므로 별도 High Level Test를 두지 않는다</strong>
+      — 같은 검증이 두 계층에 중복되면 안 되기 때문. 프로젝트 제약으로 Cucumber를 도입할 수 없을 때만 대표 시나리오 1개를 JUnit 인수 테스트로 대체한다.
+    </p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>구현 — 기어가 스킬을 고른다</h2>
+      <p class="lede">둘 다 같은 <code>tdd-red</code> / <code>tdd-green</code> / <code>tdd-blue</code> 에이전트에 위임한다. 차이는 사용자 피드백을 <em>어디서</em> 기다리는가다.</p>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>상황</th><th>기어</th><th>호출</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>낯선 도메인·기술, 학습 목적, 설계 미확정</td><td><code>low</code></td><td><code>/tdd-rgb --gear=low</code></td></tr>
+          <tr><td>유사 문제 경험 있음, 설계가 안정되어 감</td><td><code>mid</code></td><td><code>/tdd-rgb --gear=mid</code></td></tr>
+          <tr><td>이론 명확, <strong>테스트 목록 전체</strong>를 자율로</td><td><code>high</code></td><td><code>/tdd-rgb --gear=high</code></td></tr>
+          <tr><td>이론 명확, <strong>feature 하나</strong>를 plan 합의 후 자율로</td><td><code>high</code></td><td><code>/tdd-feature</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      <code>--gear</code>를 생략하면 진행 기록에 남은 기어로 복원되고, 명시하면 기록보다 우선한다.
+      <code>/tdd-feature</code>는 <code>--gear</code>를 받지 않는다 — Phase B 자율 진행이 곧 high이기 때문이다.
+    </p>
+
+    <div class="card">
+      <figure>
+        <svg class="checkpoint-svg" viewBox="0 0 820 220" role="img"
+             aria-label="tdd-rgb는 기어가 정한 검토 지점에서 대기하고, tdd-feature는 합의 시점에만 대기한 뒤 끝까지 자율 진행하는 것을 보여주는 다이어그램">
+          <text x="8" y="24" font-size="12.5" font-weight="700">tdd-rgb</text>
+          <text x="8" y="40" font-size="11" class="muted">low 기어 · 매 단계 대기</text>
+
+          <line x1="160" y1="55" x2="800" y2="55" stroke="currentColor" stroke-width="1.2" />
+          <g font-size="10.5">
+            <circle cx="200" cy="55" r="4" class="wait-dot" /><text x="200" y="72" text-anchor="middle">R</text>
+            <circle cx="240" cy="55" r="4" class="wait-dot" /><text x="240" y="72" text-anchor="middle">G</text>
+            <circle cx="280" cy="55" r="4" class="wait-dot" /><text x="280" y="72" text-anchor="middle">B</text>
+            <circle cx="360" cy="55" r="4" class="wait-dot" /><text x="360" y="72" text-anchor="middle">R</text>
+            <circle cx="400" cy="55" r="4" class="wait-dot" /><text x="400" y="72" text-anchor="middle">G</text>
+            <circle cx="440" cy="55" r="4" class="wait-dot" /><text x="440" y="72" text-anchor="middle">B</text>
+            <circle cx="520" cy="55" r="4" class="wait-dot" /><text x="520" y="72" text-anchor="middle">R</text>
+            <circle cx="560" cy="55" r="4" class="wait-dot" /><text x="560" y="72" text-anchor="middle">G</text>
+            <circle cx="600" cy="55" r="4" class="wait-dot" /><text x="600" y="72" text-anchor="middle">B</text>
+          </g>
+          <text x="240" y="94" text-anchor="middle" font-size="10.5" class="muted">test 1</text>
+          <text x="400" y="94" text-anchor="middle" font-size="10.5" class="muted">test 2</text>
+          <text x="560" y="94" text-anchor="middle" font-size="10.5" class="muted">test 3 …</text>
+          <text x="20" y="59" font-size="10" class="muted">●=대기</text>
+
+          <text x="8" y="140" font-size="12.5" font-weight="700">tdd-feature</text>
+          <text x="8" y="156" font-size="11" class="muted">= feature 범위 high</text>
+
+          <line x1="160" y1="171" x2="800" y2="171" stroke="currentColor" stroke-width="1.2" />
+          <circle cx="160" cy="171" r="5" class="wait-dot" />
+          <text x="160" y="190" text-anchor="middle" font-size="10.5">plan 합의</text>
+
+          <g font-size="10.5" class="pass-dot">
+            <circle cx="220" cy="171" r="3" /><circle cx="260" cy="171" r="3" /><circle cx="300" cy="171" r="3" />
+            <circle cx="360" cy="171" r="3" /><circle cx="400" cy="171" r="3" /><circle cx="440" cy="171" r="3" />
+            <circle cx="520" cy="171" r="3" /><circle cx="560" cy="171" r="3" /><circle cx="600" cy="171" r="3" />
+          </g>
+          <circle cx="700" cy="171" r="5" class="wait-dot" />
+          <text x="700" y="190" text-anchor="middle" font-size="10.5">적대적 리뷰 후 검토</text>
+          <text x="400" y="205" text-anchor="middle" font-size="10.5" class="muted">test 1 R·G·B → test 2 R·G·B → test 3 R·G·B … (대기 없음)</text>
+        </svg>
+        <figcaption>같은 아홉 개의 R/G/B 스텝. tdd-rgb는 기어가 정한 지점에서, tdd-feature는 시작 전 합의와 완료 후 적대적 리뷰 두 곳에서만 사용자를 기다린다.</figcaption>
+      </figure>
+    </div>
+
+    <div class="compare-grid">
+      <div class="compare-col">
+        <h3><code>tdd-rgb</code> <span style="color:var(--text-muted); font-weight:400;">[plan] [--gear=low|mid|high]</span></h3>
+        <ul>
+          <li>기어가 검토 지점의 밀도만 조절 — TDD 3법칙·한 번에 테스트 하나·phase별 커밋은 모든 기어 동일</li>
+          <li>기어마다 <strong>이해 채널</strong>이 다르다: low는 편집 직접 읽기, mid는 사이클 diff 검토 + tidying 지목, high는 행동 명세 + 표본 정독</li>
+          <li>업시프트 억제: 테스트가 얇은 기존 코드에 걸친 슬라이스, 오래 유지보수할 핵심 도메인</li>
+          <li>다운시프트 전에 먼저 설명을 제공 — 이해 결손이면 설명으로 해소, 실패(revert·예상 밖 실패)면 즉시 다운시프트</li>
+        </ul>
+      </div>
+      <div class="compare-col">
+        <h3><code>tdd-feature</code> <span style="color:var(--text-muted); font-weight:400;">[설명|plan]</span></h3>
+        <ul>
+          <li>Phase A(문제·분해·완료조건 합의)까지만 인터랙티브</li>
+          <li>합의 게이트 통과 후 Phase B — feature의 모든 test를 끝까지 자율 실행</li>
+          <li><strong>Phase B = feature 범위의 high 기어</strong> → high 안전장치 동일 적용: 폭발 반경 점검 · 시작 커밋 해시 기록 · 완료 보고 전 적대적 리뷰</li>
+          <li>WIP=1: 한 실행에 feature 하나만. 커밋은 <code>test:</code>/<code>feat:</code>/<code>refactor:</code>로 분리</li>
+          <li>low·mid 검토 밀도가 필요하면 이 스킬이 아니라 <code>/tdd-rgb</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>RGB 위임 사이클</h2>
+      <p class="lede">두 실행기 모두 test 하나마다 이 세 에이전트를 순서대로 호출한다.</p>
+    </div>
+    <div class="card rgb-cycle-wrap">
+      <figure>
+        <svg class="rgb-cycle-svg" viewBox="0 0 560 220" role="img"
+             aria-label="Red 에이전트가 실패 테스트를 작성하고, Green 에이전트가 최소 구현으로 통과시키고, Blue 에이전트가 정리한 뒤 다음 테스트로 넘어가는 순환 다이어그램">
+          <defs>
+            <marker id="arrow-cycle" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+            </marker>
+          </defs>
+
+          <circle cx="130" cy="70" r="46" fill="var(--red-bg)" stroke="var(--red)" stroke-width="1.6" />
+          <text x="130" y="66" text-anchor="middle" class="lbl-red" font-weight="700" font-size="14">Red</text>
+          <text x="130" y="83" text-anchor="middle" class="lbl-red" font-size="10.5">test:</text>
+
+          <circle cx="310" cy="70" r="46" fill="var(--green-bg)" stroke="var(--green)" stroke-width="1.6" />
+          <text x="310" y="66" text-anchor="middle" class="lbl-green" font-weight="700" font-size="14">Green</text>
+          <text x="310" y="83" text-anchor="middle" class="lbl-green" font-size="10.5">feat:</text>
+
+          <circle cx="220" cy="160" r="46" fill="var(--blue-bg)" stroke="var(--blue)" stroke-width="1.6" />
+          <text x="220" y="156" text-anchor="middle" class="lbl-blue" font-weight="700" font-size="14">Blue</text>
+          <text x="220" y="173" text-anchor="middle" class="lbl-blue" font-size="10.5">refactor:</text>
+
+          <path d="M172,58 L268,58" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow-cycle)" fill="none" />
+          <path d="M292,108 L248,132" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow-cycle)" fill="none" />
+          <path d="M188,138 L 148,102" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow-cycle)" fill="none" />
+
+          <text x="220" y="30" text-anchor="middle" font-size="11" class="muted">실패하는 테스트만</text>
+          <text x="415" y="70" font-size="11" class="muted">최소 구현으로 통과</text>
+          <text x="330" y="205" font-size="11" class="muted">Local Tidying (변경 있을 때만)</text>
+
+          <path d="M266,160 C 420,160 460,90 400,58" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 4" marker-end="url(#arrow-cycle)" fill="none" />
+          <text x="430" y="130" font-size="10.5" class="muted">다음 test로</text>
+        </svg>
+        <figcaption>세 에이전트(sonnet) 모두 커밋 형식은 재기술하지 않고 <code>reviewable-commits.md</code>를 참조만 한다 — 단일 출처 유지. web-app에서는 Green이 자기 시나리오의 <code>@pending</code>도 같은 커밋에서 해제한다.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="standalone">
+    <div class="section-head">
+      <h2>독립 진입점 — 메인 파이프라인 밖</h2>
+      <p class="lede">plan → RGB 흐름과 무관하게, 필요할 때 바로 부른다.</p>
+    </div>
+    <div class="standalone-grid">
+      <div class="standalone-item">
+        <span class="cmd">tdd-legacy &lt;FQCN|경로&gt;</span>
+        <p>테스트 없는 기존 코드 → Characterization → Approval → Mutation test 안전망 구축 후 개선 스킬로 handoff.</p>
+      </div>
+      <div class="standalone-item">
+        <span class="cmd">tdd-tidy [commit-ref]</span>
+        <p>git diff로 변경 파일 자동 탐지 → RGB 없이 tdd-blue의 Local Tidying만 독립 실행.</p>
+      </div>
+      <div class="standalone-item">
+        <span class="cmd">system-wide-refactoring [commit-ref]</span>
+        <p>분석 → 후보 제시 → 확인 → 별도 브랜치·기법별 커밋 → PR 생성.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>개별 리팩토링 기법 (18개)</h2>
+      <p class="lede">순서가 없다 — tdd-blue / tdd-tidy 단계에서 상황에 맞는 것만 이름으로 호출한다.</p>
+    </div>
+    <div class="tag-cloud">
+      <span>discover-value-object</span><span>first-class-collection</span><span>encapsulate-collection</span>
+      <span>extract-method-object</span><span>introduce-special-case</span><span>replace-conditional-with-poly</span>
+      <span>segregate-functional-core</span><span>separate-query-modifier</span><span>replace-loop-with-pipeline</span>
+      <span>replace-temp-with-query</span><span>introduce-assertion</span><span>introduce-parameter-object</span>
+      <span>explicit-parameters</span><span>intent-revealing-names</span><span>naming-process</span>
+      <span>decompose-conditional</span><span>consolidate-conditional</span><span>lift-up-conditional</span>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  msbaek-tdd 1.15.0 · commit 형식 단일 출처: <code>docs/reviewable-commits.md</code>
+</footer>
+
+</body>
+</html>
