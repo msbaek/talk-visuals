@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>msbaek-tdd 오케스트레이터 — 전체 절차</title>
-<meta name="description" content="msbaek-tdd 플러그인 1.15.0 기준 전체 워크플로우 지도 — /tdd 진입부터 tdd-plan, Walking Skeleton, RGB 사이클, 독립 진입점까지.">
+<meta name="description" content="msbaek-tdd 플러그인 1.19.0 기준 전체 워크플로우 지도 — /tdd 진입부터 tdd-plan, Walking Skeleton, RGB 사이클, 독립 진입점까지.">
 <meta property="og:title" content="msbaek-tdd 오케스트레이터 — 전체 절차">
-<meta property="og:description" content="msbaek-tdd 플러그인 1.15.0 기준 전체 워크플로우 지도.">
+<meta property="og:description" content="msbaek-tdd 플러그인 1.19.0 기준 전체 워크플로우 지도.">
 <meta property="og:type" content="website">
 <style>
   :root {
@@ -391,7 +391,7 @@
 <main>
 
   <section>
-    <p class="eyebrow">PLUGIN WORKFLOW MAP · msbaek-tdd 1.15.0</p>
+    <p class="eyebrow">PLUGIN WORKFLOW MAP · msbaek-tdd 1.19.0</p>
     <h1>오케스트레이터가 짜는 전체 절차</h1>
     <p class="lede">
       진입점 <code>/tdd</code>에서 시작해 계획(<code>tdd-plan</code>) → 구현(<code>tdd-rgb</code> /
@@ -416,6 +416,20 @@
         <span class="delta-ver">1.15.0</span>
         <span>기어별 스킬 라우팅 명시. <code>tdd-feature</code>의 Phase B가 <strong>feature 범위의 high 기어</strong>임을 선언하고,
           high 안전장치 3종(폭발 반경 점검·시작 커밋 기록·적대적 리뷰)을 동일 적용.</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.16.0</span>
+        <span>Walking Skeleton 실사용 피드백 4건 — <strong>인수 조건에 없는 API 발명 금지</strong>,
+          Spring Data <code>XImpl</code> 자동 프래그먼트 <strong>네이밍 충돌</strong> 회피, docker MySQL 기동
+          <strong>Testcontainers vs Docker Compose</strong> 두 대안, 예외 처리는 처음부터
+          <code>@RestControllerAdvice</code>로 분리.</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.18.0–1.19.0</span>
+        <span>Walking Skeleton에 <strong>실행 SQL 로깅</strong> 추가 — 기본은 <code>spring.jpa.show-sql</code>,
+          바인딩 값·JPA 밖 경로까지 봐야 하면 p6spy로 승급. 스타터 버전은 Spring Boot 메이저에
+          종속(1.19.0에서 4.x 대응 안내로 교정)되고, "로그가 나온다"가 "설정이 맞다"의 증거가
+          아니라는 함정을 명시.</span>
       </li>
     </ul>
   </div>
@@ -520,6 +534,58 @@
       <code>@Profile("!inMemory")</code>는 JPA(<code>local</code>·<code>dev</code>·<code>stage</code>·<code>prod</code> 전부).
       진짜 DB가 기본이고 in-memory가 명시적 예외라는 원칙이 profile 구조에 새겨진다.
       인수 테스트는 항상 <code>local</code>에서 돈다.
+    </p>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>실전에서 걸리는 지점 (1.16.0)</th><th>원칙</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>API 발명 금지</td>
+            <td>Gherkin이 요구하지 않는 쓰기(POST) 엔드포인트를 검증 편의로 만들지 않는다 — Target Design은 Protocol Driver가 확정한다. 시나리오가 전부 "이미 담긴" 상태를 전제하면 Repository로 시드하고 읽기 경로 하나만 HTTP로 관통</td>
+          </tr>
+          <tr>
+            <td>네이밍 충돌</td>
+            <td>Spring Data가 인터페이스 <code>X</code>의 <code>XImpl</code>을 커스텀 구현 프래그먼트로 자동 병합 — 포트 구현체(어댑터) 이름을 Spring Data 인터페이스가 아니라 <strong>포트 인터페이스</strong>에서 파생시켜야 <code>BeanCurrentlyInCreationException</code>을 피한다</td>
+          </tr>
+          <tr>
+            <td>예외 처리 배치</td>
+            <td>컨트롤러 안에 <code>@ExceptionHandler</code>를 두지 않는다 — 처음부터 <code>@RestControllerAdvice</code> 전역 핸들러로 분리(메서드 추출 금지 원칙의 예외가 아니라 배치 위치의 문제)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>docker MySQL 기동 방법</th><th>장점</th><th>주의</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Testcontainers (기본)</td>
+            <td>테스트가 컨테이너 수명을 소유, CI 표준</td>
+            <td>일부 Docker 환경(OrbStack 등)에서 API 버전 협상 실패 — <code>systemProperty("api.version","1.41")</code>로 우회</td>
+          </tr>
+          <tr>
+            <td>Spring Boot Docker Compose</td>
+            <td><code>compose.yaml</code> 하나를 <code>bootRun</code>·테스트가 공유, <code>@Container</code> 보일러플레이트 없음</td>
+            <td><code>lifecycle-management=start-only</code> + <code>skip.in-tests=false</code>(기본 true), 의존성은 <code>testAndDevelopmentOnly</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      <strong>관통 확인 — 실행 SQL 로깅 (1.18.0–1.19.0)</strong>. real 원칙은 선언이 아니라 확인으로 지켜진다 —
+      임베디드 DB로 조용히 대체되거나 설정이 무시돼도 테스트는 그대로 초록색이다. 기본은 의존성 추가 없는
+      <code>spring.jpa.show-sql=true</code>. 바인딩된 실제 값이나 <code>JdbcTemplate</code> 등 JPA 밖 경로까지
+      봐야 하면 p6spy(<code>decorator.datasource.p6spy.enable-logging=true</code>, 최상위 prefix는
+      <code>decorator</code>이지 <code>spring.</code>이 아님)로 승급한다. 스타터 버전은 Spring Boot 메이저에
+      종속되며, 스타터가 설정 없이도 기본값으로 로그를 내보내므로 <strong>"로그가 나온다"는 "설정이
+      맞다"의 증거가 아니다</strong> — 프로퍼티 키를 README로 재확인한다.
     </p>
   </section>
 
@@ -714,7 +780,7 @@
 </main>
 
 <footer>
-  msbaek-tdd 1.15.0 · commit 형식 단일 출처: <code>docs/reviewable-commits.md</code>
+  msbaek-tdd 1.19.0 · commit 형식 단일 출처: <code>docs/reviewable-commits.md</code>
 </footer>
 
 </body>
