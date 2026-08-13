@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>msbaek-tdd 오케스트레이터 — 전체 절차</title>
-<meta name="description" content="msbaek-tdd 플러그인 1.19.0 기준 전체 워크플로우 지도 — /tdd 진입부터 tdd-plan, Walking Skeleton, RGB 사이클, 독립 진입점까지.">
+<meta name="description" content="msbaek-tdd 플러그인 1.31.0 기준 전체 워크플로우 지도 — 요구사항 원천(tdd-plan-input)부터 /tdd 진입, tdd-plan, Walking Skeleton과 영속성 경계, RGB 사이클, 독립 진입점까지.">
 <meta property="og:title" content="msbaek-tdd 오케스트레이터 — 전체 절차">
-<meta property="og:description" content="msbaek-tdd 플러그인 1.19.0 기준 전체 워크플로우 지도.">
+<meta property="og:description" content="msbaek-tdd 플러그인 1.31.0 기준 전체 워크플로우 지도.">
 <meta property="og:type" content="website">
 <style>
   :root {
@@ -377,6 +377,41 @@
     color: var(--text-muted);
   }
 
+  /* ---- 파이프라인 개요 svg ---- */
+  .pipeline-svg { width: 100%; height: auto; display: block; }
+  .pipeline-svg text { font-family: var(--font-mono); fill: currentColor; }
+  .pipeline-svg .muted { fill: var(--text-muted); }
+  .pipeline-svg .stage-box { fill: var(--surface-alt); stroke: var(--border); }
+  .pipeline-svg .stage-new { fill: var(--accent-bg); stroke: var(--accent); }
+  .pipeline-svg .stage-opt { stroke-dasharray: 4 4; }
+
+  /* ---- 함정 콜아웃 ---- */
+  .pitfall {
+    background: var(--red-bg);
+    border: 1px solid color-mix(in srgb, var(--red) 40%, var(--border));
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-size: 13.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pitfall .eyebrow { color: var(--red); }
+
+  /* ---- 이전 델타 접기 ---- */
+  details.older {
+    border-top: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+    padding-top: 12px;
+  }
+  details.older summary {
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  details.older .delta-list { margin-top: 12px; }
+
   footer {
     max-width: 920px;
     margin: 0 auto;
@@ -391,17 +426,110 @@
 <main>
 
   <section>
-    <p class="eyebrow">PLUGIN WORKFLOW MAP · msbaek-tdd 1.19.0</p>
+    <p class="eyebrow">PLUGIN WORKFLOW MAP · msbaek-tdd 1.31.0</p>
     <h1>오케스트레이터가 짜는 전체 절차</h1>
     <p class="lede">
-      진입점 <code>/tdd</code>에서 시작해 계획(<code>tdd-plan</code>) → 구현(<code>tdd-rgb</code> /
-      <code>tdd-feature</code>)으로 이어지는 메인 파이프라인과, 그 바깥에서 독립적으로 쓰이는
-      레거시·정리 스킬들의 전체 배치.
+      요구사항 원천(<code>tdd-plan-input</code>)에서 시작해 템플릿 생성(<code>/tdd</code>) →
+      계획(<code>tdd-plan</code>) → 구현(<code>tdd-rgb</code> / <code>tdd-feature</code>)으로
+      이어지는 메인 파이프라인과, 그 바깥에서 독립적으로 쓰이는 레거시·정리 스킬들의 전체 배치.
     </p>
   </section>
 
+  <section>
+    <div class="card">
+      <figure>
+        <svg class="pipeline-svg" viewBox="0 0 880 210" role="img"
+             aria-label="tdd-plan-input이 요구사항 원천 문서를 만들고, slash tdd가 템플릿을 만들고, tdd-plan이 계획을 세운 뒤 web-app이면 cucumber-acceptance를 거쳐 tdd-rgb 또는 tdd-feature로 구현하는 파이프라인 다이어그램">
+          <defs>
+            <marker id="arrow-pipe" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+            </marker>
+          </defs>
+
+          <rect x="4" y="30" width="164" height="52" rx="8" class="stage-new" stroke-width="1.4" />
+          <text x="86" y="52" text-anchor="middle" font-size="12.5" font-weight="700">/tdd-plan-input</text>
+          <text x="86" y="69" text-anchor="middle" font-size="10.5" class="muted">요구사항 원천 (신규 1.21.0)</text>
+
+          <rect x="204" y="30" width="128" height="52" rx="8" class="stage-box" stroke-width="1.2" />
+          <text x="268" y="52" text-anchor="middle" font-size="12.5" font-weight="700">/tdd</text>
+          <text x="268" y="69" text-anchor="middle" font-size="10.5" class="muted">템플릿 문서 생성</text>
+
+          <rect x="368" y="30" width="140" height="52" rx="8" class="stage-box" stroke-width="1.2" />
+          <text x="438" y="52" text-anchor="middle" font-size="12.5" font-weight="700">/tdd-plan</text>
+          <text x="438" y="69" text-anchor="middle" font-size="10.5" class="muted">계획 (인터랙티브)</text>
+
+          <rect x="544" y="30" width="152" height="52" rx="8" class="stage-box stage-opt" stroke-width="1.2" />
+          <text x="620" y="52" text-anchor="middle" font-size="12" font-weight="700">cucumber-acceptance</text>
+          <text x="620" y="69" text-anchor="middle" font-size="10.5" class="muted">web-app 필수 / general 선택</text>
+
+          <rect x="732" y="16" width="144" height="40" rx="8" class="stage-box" stroke-width="1.2" />
+          <text x="804" y="41" text-anchor="middle" font-size="12.5" font-weight="700">/tdd-rgb</text>
+          <rect x="732" y="66" width="144" height="40" rx="8" class="stage-box" stroke-width="1.2" />
+          <text x="804" y="91" text-anchor="middle" font-size="12.5" font-weight="700">/tdd-feature</text>
+
+          <line x1="168" y1="56" x2="200" y2="56" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow-pipe)" />
+          <line x1="332" y1="56" x2="364" y2="56" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow-pipe)" />
+          <line x1="508" y1="56" x2="540" y2="56" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow-pipe)" />
+          <line x1="696" y1="56" x2="716" y2="56" stroke="currentColor" stroke-width="1.4" />
+          <path d="M716,56 L716,36 L728,36" stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#arrow-pipe)" />
+          <path d="M716,56 L716,86 L728,86" stroke="currentColor" stroke-width="1.4" fill="none" marker-end="url(#arrow-pipe)" />
+
+          <path d="M86,86 L86,132 L438,132 L438,88" stroke="var(--accent)" stroke-width="1.3" fill="none"
+                stroke-dasharray="4 4" marker-end="url(#arrow-pipe)" />
+          <text x="262" y="150" text-anchor="middle" font-size="10.5" class="muted">원천 문서는 <tspan font-weight="700">참조</tspan>로 전달 — /tdd-plan의 인자가 아니다</text>
+
+          <text x="86" y="180" text-anchor="middle" font-size="10.5" class="muted">docs/&lt;topic&gt;-plan-input.md</text>
+          <text x="438" y="180" text-anchor="middle" font-size="10.5" class="muted">docs/&lt;topic&gt;-plan.md</text>
+          <text x="804" y="180" text-anchor="middle" font-size="10.5" class="muted">test:/feat:/refactor:</text>
+        </svg>
+        <figcaption>두 문서를 혼동하지 않는 것이 이 파이프라인의 핵심이다 — <code>-plan-input.md</code>는 <strong>요구사항 원천</strong>(사람이 준 규칙·예제), <code>-plan.md</code>는 <strong>작성 대상 템플릿</strong>(절차 섹션과 체크박스)이다.</figcaption>
+      </figure>
+    </div>
+  </section>
+
   <div class="status-card">
-    <p class="eyebrow">1.12.0 이후 바뀐 것</p>
+    <p class="eyebrow">1.19.0 이후 바뀐 것</p>
+    <ul class="delta-list">
+      <li>
+        <span class="delta-ver">1.21.0</span>
+        <span><strong><code>tdd-plan-input</code> 신설</strong> — 계획 앞에 요구사항 원천 문서 단계가 생겼다.
+          주제 한 줄이나 흩어진 메모에서 시작해 질의응답으로 §1~§6을 채운다. <strong>예제 수치의 정본은 사람 계산</strong>이고,
+          빈칸은 채우지 않고 <strong>질문 / §6 미확정 / §1 제외 목록</strong> 셋 중 하나로 보낸다.</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.20.0</span>
+        <span>경계 조건 식별에 <strong>집계 경계</strong> 범주 추가 — 같은 키가 여러 항목으로 나뉠 때
+          검증 단위(항목별)와 반영 단위(합산)가 어긋나면 그 차이가 곧 결함이다(오버셀).</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.22.0–1.24.0</span>
+        <span><strong>영속성 경계</strong> 확정과 실전 교정. 적용 순서는 <s>경계 먼저</s> → <strong>가드가 경계보다 먼저</strong>,
+          가드는 <s>detach</s> → <strong>Controller 경계 테스트</strong>(detach는 LAZY 유지와 배타적),
+          계약 테스트는 LAZY 연관을 <s>검증에서 제외</s> → <strong><code>@EntityGraph</code>로 완전한 애그리게이트</strong>.</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.25.0–1.26.0</span>
+        <span>Approvals 판단 기준을 <strong>개수가 아니라 검증 대상</strong>으로 — 출력 형상이면 Approvals, 주장 하나면 개별 단정.
+          와이어 포맷 승인과 도메인 출력 승인은 <s>배타적 선택</s> → <strong>한 파일에 두 구획 병기</strong>.</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.27.0</span>
+        <span>OSIV off를 <s>기본</s> → <strong>불변 규칙</strong>으로. 그리고 <strong>설정 항목의 부재는 off가 아니라 on</strong>이다.</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.28.0</span>
+        <span>네 곳에 흩어져 있던 같은 함정을 <strong>“조용한 실패”</strong> 원칙으로 묶고,
+          <strong>도구는 최초로 필요해진 시점에</strong> 추가한다는 규칙을 함께 올렸다.</span>
+      </li>
+      <li>
+        <span class="delta-ver">1.29.0–1.31.0</span>
+        <span>상시 로드 분량 정리 — Mocking 근거(<code>tdd-rgb</code> 511줄로), <code>tdd-plan</code> 1082 → 478줄,
+          리팩토링 18개 스킬의 공통 절차를 <strong>정본 1개</strong>로 추출(합계 −842줄). 브랜치+PR은 기본에서 빠지고 조건절로.</span>
+      </li>
+    </ul>
+
+    <details class="older">
+      <summary>1.12.0 – 1.19.0 (이전 요약)</summary>
     <ul class="delta-list">
       <li>
         <span class="delta-ver">1.14.0</span>
@@ -432,7 +560,74 @@
           아니라는 함정을 명시.</span>
       </li>
     </ul>
+    </details>
   </div>
+
+  <section>
+    <div class="section-head">
+      <h2>앞단계 — <code>/tdd-plan-input</code> (요구사항 원천)</h2>
+      <p class="lede">
+        <code>tdd-plan</code>이 단계 1부터 바로 시작할 수 있도록, 도메인 규칙과 예제를
+        <strong>질의응답으로</strong> 채워 원천 문서를 만든다. 서브에이전트에 위임하지 않는다 —
+        질의응답 자체가 이 스킬의 본질이다.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="terminal">
+        <span class="prompt-mark">$</span>
+        <span>/tdd-plan-input</span>
+        <span class="arg-fqcn">"장바구니 금액 계산" | docs/memo.md</span>
+      </div>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>절</th><th>담는 것</th><th>tdd-plan에서 쓰이는 자리</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="axis">§1 범위·유형</td><td>기능 목록 · TDD 유형 · <strong>의도적으로 제외한 것</strong></td><td>단계 1 시작 전 범위 확정</td></tr>
+          <tr><td class="axis">§2 규칙·예제</td><td>기본/특별 규칙 + <strong>사람이 계산한</strong> 예제</td><td>단계 1a 도메인 규칙(0층), “검산 전개”</td></tr>
+          <tr><td class="axis">§3 액터·가치</td><td>역할 / 원하는 것 / 얻는 가치 <strong>표</strong></td><td>단계 1b User Story 조립 + INVEST 점검</td></tr>
+          <tr><td class="axis">§4 경계 조건</td><td>5분류 스캔(수치·크기·상태·시간순서·<strong>집계</strong>)</td><td>단계 2 Gherkin Examples · 단계 3 unit test 목록</td></tr>
+          <tr><td class="axis">§5 흐름 신호</td><td>액터 충돌·상태 전이·대안 흐름·불변식 <strong>사실만</strong></td><td>조건부 Use Case 작성 판단</td></tr>
+          <tr><td class="axis">§6 미확정</td><td>보류된 결정 + 그 결정이 무엇에 영향을 주는지</td><td>단계 1 진행 전 결정 대상</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>지어내다(invent)의 세 형태</th><th>방어 장치</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>시나리오를 지어냄</td><td>§1 “의도적으로 제외한 것” 목록 — 이 목록이 없으면 tdd-plan이 빈칸을 누락으로 오인한다</td></tr>
+          <tr><td>수치를 지어냄</td><td>§4에 <code>예제 없음</code> 표시 → 사용자에게 계산 요청. <strong>AI 계산값은 확인 전에는 문서에 넣지 않는다</strong> — 값이 맞더라도 규칙 해석이 틀렸다면 틀린 구현이 초록불이 된다</td></tr>
+          <tr><td>인터페이스를 지어냄</td><td>tdd-plan 단계 E-2의 “인수 조건에 없는 API를 발명하지 않는다”</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      <strong>재료까지만.</strong> 완성형 User Story(<code>As a / I want / So that</code>)·Gherkin·unit test 목록을
+      이 문서에 쓰지 않는다. 그 형식화는 tdd-plan이 사용자 피드백을 받으며 하는 일이라, 미리 쓰면 그 피드백 루프를
+      건너뛴다. 빈칸을 만났을 때 선택지는 셋뿐이다 — <strong>질문한다 / §6 미확정으로 올린다 / §1 제외 목록에 넣는다.</strong>
+      넷째(“일반 도메인 지식으로 채운다”)는 없다. 게이트에 막혔다는 이유로 목록을 채우는 것도 같은 위반이므로,
+      답이 두 번 유보되면 게이트를 §6으로 <strong>우회</strong>한다.
+    </p>
+
+    <div class="pitfall">
+      <p class="eyebrow">함정 — 원천 문서를 <code>/tdd-plan</code>의 인자로 주지 않는다</p>
+      <p>
+        <code>/tdd-plan</code>의 인자는 절차 섹션과 체크박스를 가진 <strong>작성 대상 템플릿</strong>(<code>/tdd</code>가 생성)이다.
+        원천 문서를 인자로 주면 tdd-plan이 그것을 템플릿으로 오인해 요구사항 섹션을 덧쓰고,
+        “숫자의 정본은 §2 하나”라는 장치가 무너진다. 원천 문서는 <strong>참조</strong>로 전달한다 —
+        <code class="cmd">/tdd-plan docs/basket-plan.md — 요구사항은 docs/basket-plan-input.md 참조</code>
+      </p>
+    </div>
+  </section>
 
   <section>
     <div class="section-head">
@@ -474,7 +669,10 @@
   <section>
     <div class="section-head">
       <h2><code>tdd-plan</code> — 계획 단계 (인터랙티브)</h2>
-      <p class="lede">단계마다 사용자 승인 후 커밋. <code>Gherkin</code> 이후 지점에서 두 유형이 갈라지고 다시 합치지 않는다.</p>
+      <p class="lede">
+        인자는 <code>/tdd</code>가 만든 템플릿, 요구사항은 <code>-plan-input.md</code> 참조.
+        단계마다 사용자 승인 후 커밋하고, <code>Gherkin</code> 이후 지점에서 두 유형이 갈라져 다시 합치지 않는다.
+      </p>
     </div>
 
     <div class="card path-grid">
@@ -586,6 +784,110 @@
       <code>decorator</code>이지 <code>spring.</code>이 아님)로 승급한다. 스타터 버전은 Spring Boot 메이저에
       종속되며, 스타터가 설정 없이도 기본값으로 로그를 내보내므로 <strong>"로그가 나온다"는 "설정이
       맞다"의 증거가 아니다</strong> — 프로퍼티 키를 README로 재확인한다.
+    </p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>영속성 경계 — skeleton과 같은 시점에 확정 (1.22.0–1.27.0)</h2>
+      <p class="lede">
+        나중에 정하면 그때는 이미 우회가 쌓여 있다 — LAZY 접근이 터지는 지점마다 EAGER로 바꾸는 식으로 번지기 때문이다.
+        되돌리는 비용은 3단계로 쌓인다: 우연히 성공 → EAGER로 우회 → 경계를 잡으며 EAGER를 도로 LAZY로.
+      </p>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>규칙</th><th>내용</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="axis">OSIV off</td>
+            <td><code>spring.jpa.open-in-view: false</code>를 <strong>항상 명시</strong>한다. 도입 시점을 판단할 항목이 아니라 JPA를 쓰는 순간부터 off다.
+              <strong>부재는 off가 아니라 on이다</strong> — 항목이 없으면 Spring Boot 기본값 <code>true</code>가 적용된다</td>
+          </tr>
+          <tr>
+            <td class="axis">트랜잭션 경계</td>
+            <td>skeleton 단계 한정으로 <strong>Controller</strong>에 둔다(조회는 <code>@Transactional(readOnly = true)</code>). 경계만을 위해 서비스 계층을 새로 만들지 않는다</td>
+          </tr>
+          <tr>
+            <td class="axis">연관관계</td>
+            <td><strong>LAZY 유지.</strong> EAGER는 전역 결정이라 목록 조회가 생기는 순간 N+1이고 그때는 되돌리기 어렵다 — 필요한 지점에서 fetch join·<code>@EntityGraph</code>로 명시적으로 당긴다</td>
+          </tr>
+          <tr>
+            <td class="axis">반환 타입</td>
+            <td>엔티티가 아니라 <strong>DTO</strong>. 엔티티를 반환하면 JSON 직렬화가 컨트롤러 <strong>바깥</strong>에서 일어나 <code>LazyInitializationException</code>(HTTP 500)이다.
+              <strong>이 실패는 테스트에 안 보인다</strong> — 클래스 레벨 <code>@Transactional</code> 안에서 직렬화가 끝나므로 테스트는 초록색, 실서버만 500</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>실전 교정 (1.24.0)</th><th>왜</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>가드가 경계보다 <strong>먼저</strong> (쓰기 경로)</td>
+            <td>경계가 없는 동안은 메서드 단위 커밋이라 조회 결과가 곧바로 detached — <strong>위험이 없으니 가드 없는 상태가 정상으로 보인다.</strong>
+              경계를 Controller로 올리는 그 변경 하나가 leak 경로를 연다. 명시적 <code>save()</code> 규율과 그 회귀 테스트가 경계와 <strong>같은 커밋</strong>에 들어가야 한다</td>
+          </tr>
+          <tr>
+            <td>조회 경로에는 순서 문제가 <strong>없다</strong></td>
+            <td><code>readOnly = true</code>는 FlushMode를 MANUAL로 두어 auto-flush가 없다 — 경계를 만드는 애노테이션이 가드를 겸한다. 존재하지 않는 위험에 대비하려다 detach를 시도하게 되는 것이 문면 탓이었다</td>
+          </tr>
+          <tr>
+            <td>가드로 <strong>detach를 쓰지 않는다</strong></td>
+            <td>detach는 LAZY 유지와 배타적이다 — 조회 시점에 detach하면 이후 지연 로딩이 전부 <code>LazyInitializationException</code>. 쓰기 경로의 가드는 <strong>Controller 경계 테스트</strong>로 세운다</td>
+          </tr>
+          <tr>
+            <td>계약 테스트에서 LAZY 연관을 <strong>빼지 않는다</strong></td>
+            <td>빼면 그 부분 계약이 어디에서도 검증되지 않는다. 포트의 계약을 “완전한 애그리게이트를 돌려준다”로 정하고 조회 메서드에 <code>@EntityGraph</code>를 건다 — 매핑은 LAZY, 당기는 것은 조회 지점에서 명시</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>조용한 실패 — 관찰된 정상 상태는 설정을 보증하지 않는다 (1.28.0)</h2>
+      <p class="lede">
+        같은 함정을 네 번 다르게 겪었다. 공통 구조는 하나다 — <strong>눈에 보이는 정상 신호를 “설정이 맞다”의 증거로 읽는 것.</strong>
+        흩어져 있으면 다섯 번째를 만난 사람이 또 처음부터 당하므로 Principles로 묶었다.
+      </p>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>신호</th><th>오독</th><th>사실</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>SQL 로그가 나온다</td><td>p6spy 설정이 맞다</td><td>키를 틀려도 기본값으로 로그는 나온다</td></tr>
+          <tr><td>테스트가 통과한다</td><td>그 검증이 일어났다</td><td>트랜잭션·애노테이션 위치 때문에 검증이 공허할 수 있다</td></tr>
+          <tr><td>설정 항목이 없다</td><td>그 기능은 꺼져 있다</td><td><code>open-in-view</code>의 부재는 off가 아니라 <strong>on</strong>이다</td></tr>
+          <tr><td>그 파일이 커밋된 적 없다</td><td>커밋되지 않도록 막혀 있다</td><td>우연히 안 들어갔을 뿐, 규칙이 없으면 언제든 들어간다</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      <strong>공통 처방</strong>: 정상으로 보이는 상태를 근거로 삼지 말고, <strong>틀렸을 때 무엇이 달라지는지</strong>를 확인한다 —
+      로그는 출력 유무가 아니라 <strong>형태 차이</strong>로, 테스트는 보호 장치를 제거한 <strong>실패 주입</strong>으로,
+      설정은 <strong>명시 여부</strong>로, 규칙은 파일 존재가 아니라 <strong>규칙 자체의 존재</strong>로 판정한다.
+      통과했다는 사실 자체는 정보가 아니다.
+    </p>
+
+    <p class="note">
+      <strong>도구는 최초로 필요해진 시점에 추가한다</strong>. 관측·검증 도구(p6spy·approvaltests)를 초기 셋업에 미리 넣지 않는 이유 셋 —
+      thinnest 원칙과 충돌, 의존성마다 비용(p6spy는 Spring Boot 메이저에 묶여 있고 어긋나면 <strong>조용히</strong> 적용되지 않는다),
+      도입 커밋에 Why가 남는다. 다만 <strong>침묵하는 실패는 미룰 수 없고 시끄러운 실패는 미뤄도 된다</strong> —
+      OSIV를 안 끄면 경계 밖 지연 로딩이 조용히 성공해 그 위에 코드가 쌓이지만(불변 규칙), p6spy가 없으면 바인딩 값을 봐야 하는
+      순간 그 자리에서 막힌다(트리거).
     </p>
   </section>
 
@@ -739,6 +1041,31 @@
         <figcaption>세 에이전트(sonnet) 모두 커밋 형식은 재기술하지 않고 <code>reviewable-commits.md</code>를 참조만 한다 — 단일 출처 유지. web-app에서는 Green이 자기 시나리오의 <code>@pending</code>도 같은 커밋에서 해제한다.</figcaption>
       </figure>
     </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr><th>Red의 승인 테스트 판단 (1.25.0–1.26.0)</th><th>기준</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Approvals인가 개별 단정인가</td>
+            <td>개수가 아니라 <strong>검증 대상</strong>으로 가른다 — 출력 형상(응답 본문·영수증·점수판)이면 Approvals, 주장이 하나면 개별 단정.
+              필드를 골라 단정하는 순간 고르지 않은 필드는 검증에서 빠지고, <strong>빠졌다는 사실이 테스트에 드러나지 않는다</strong></td>
+          </tr>
+          <tr>
+            <td>와이어 포맷 승인 <strong>+</strong> 도메인 출력 승인</td>
+            <td>배타적 선택이 아니라 <strong>한 파일에 두 구획 병기</strong>. 위험한 것은 교체이지 병기가 아니다 —
+              raw만 깨지면 표현이 바뀐 것이고 둘 다 깨지면 값이 바뀐 것이라, 실패 diff가 어느 층위인지까지 알려준다.
+              (실측: <code>long → double</code> 변경에 raw는 <code>8000 → 8000.0</code>으로 깨졌지만 printer의 “단가: 8,000원”은 그대로였다)</td>
+          </tr>
+          <tr>
+            <td>새 승인은 <strong>실패 주입</strong>으로 확인</td>
+            <td>Scrubber는 최소로. 재직렬화하면 도입 목적인 와이어 포맷 검증력을 스스로 없앤다. 승인 파일(<code>*.approved.txt</code>)은 명세이므로 추적하고, 실행 산물(<code>*.received.txt</code>)만 gitignore</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <section class="standalone">
@@ -775,12 +1102,17 @@
       <span>explicit-parameters</span><span>intent-revealing-names</span><span>naming-process</span>
       <span>decompose-conditional</span><span>consolidate-conditional</span><span>lift-up-conditional</span>
     </div>
+    <p class="note">
+      1.31.0에서 18개에 복사돼 있던 공통 절차(대상 파일 수집·후보 제시 형식·테스트·커밋 규칙)를
+      <strong>정본 1개</strong>로 추출했다 — 각 스킬에는 기법 고유의 것만 남는다: 무엇을 찾는가 · 어떻게 바꾸는가 · 그 기법의 실패 조건.
+      브랜치+PR은 기본에서 빠지고 <strong>조건절</strong>로 옮겼다(폭발 반경이 큰 영역, 여러 파일의 공개 API를 바꿀 때, 팀이 리뷰를 요구할 때).
+    </p>
   </section>
 
 </main>
 
 <footer>
-  msbaek-tdd 1.19.0 · commit 형식 단일 출처: <code>docs/reviewable-commits.md</code>
+  msbaek-tdd 1.31.0 · commit 형식 단일 출처: <code>docs/reviewable-commits.md</code>
 </footer>
 
 </body>
