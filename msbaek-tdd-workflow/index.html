@@ -998,6 +998,26 @@
         </ul>
       </div>
     </div>
+
+    <h3>두 스킬 공통 — 완료 시 하드닝 제안(선택) <span style="color:var(--text-muted); font-weight:400; font-size:0.8em;">1.37.0 신설 · 순서는 1.40.1 기준</span></h3>
+    <p class="note">이 항목만 1.31.0 이후 변경을 반영했다 — 나머지 지면은 여전히 1.31.0 기준.</p>
+    <p>구현이 끝나면 두 스킬 모두 최종 보고 마지막에 하드닝 제안을 붙인다.
+    <code>/tdd-rgb</code>는 기어와 무관하게 전체 완료 시점에, <code>/tdd-feature</code>는
+    feature 완료 보고에 붙인다. <strong>제안만 하고 자동 실행하지 않는다</strong> — 실행 여부는
+    사용자가 정한다. 순서는 비용순이 아니라 파이프라인순이다.</p>
+    <ol>
+      <li><strong>정리할 곳 찾기</strong> — CRAP 점검(<code>crap4java-analyzer</code>)과
+      중복 스캔(<code>dry4java-analyzer</code>). 변경 파일 한정, 수 초~수십 초</li>
+      <li><strong>구조 정리</strong> — <code>/system-wide-refactoring</code>이 ①이 지목한
+      메서드·중복 쌍을 기법별 커밋으로 정리</li>
+      <li><strong>테스트 강화</strong> — <code>mutate4java-runner</code>로 뮤테이션 테스트.
+      ②를 마친 뒤에 돌린다</li>
+    </ol>
+    <p class="note">③이 마지막인 이유 — tidying은 동작을 보존하지만 <strong>뮤테이션 지점
+    자체를 바꾼다</strong>. 메서드를 추출하면 새 뮤턴트 자리가 생겨서, 정리 전에 얻은
+    “전 뮤턴트를 죽였다”는 결론이 정리 후에는 성립하지 않는다. 파일당 수 분이 드는 비용도
+    그대로 버려진다. Uncle Bob의 파이프라인에서 Hardener가 Cleaner 다음에 오는 것과 같은
+    이유다. (CRAP·mutation은 Maven 프로젝트 한정, DRY는 빌드 도구와 무관.)</p>
   </section>
 
   <section>
