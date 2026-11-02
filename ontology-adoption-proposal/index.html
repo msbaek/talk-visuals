@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>온톨로지 활용 제안 — 필요한가 / 어떻게 쓰나 — Interactive Review</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #f7f8fa; --bg-elev: #ffffff; --bg-elev-2: #f3f4f6;
+  --border: #e5e7eb; --border-hi: #d1d5db;
+  --text: #111827; --text-dim: #4b5563; --text-faint: #9ca3af;
+  --accept: #059669; --question: #d97706; --modify: #4f46e5; --reject: #dc2626;
+  --glossary: #0d9488;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.65; display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+aside { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; background: var(--bg-elev); border-right: 1px solid var(--border); padding: 24px 18px; }
+aside h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 14px; font-weight: 600; }
+aside h2:not(:first-child) { margin-top: 24px; }
+aside ol { list-style: none; }
+aside li { margin-bottom: 4px; }
+aside a { color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; justify-content: space-between; padding: 7px 10px; border-radius: 6px; transition: background 0.15s, color 0.15s; }
+aside a:hover { background: var(--bg-elev-2); color: var(--text); }
+aside a.current { background: var(--bg-elev-2); color: var(--text); border-left: 2px solid var(--modify); padding-left: 8px; }
+.filters { display: flex; gap: 5px; flex-wrap: wrap; }
+.filters button { background: var(--bg-elev-2); color: var(--text-dim); border: 1px solid var(--border); padding: 5px 9px; border-radius: 5px; font-size: 11px; cursor: pointer; font-family: var(--mono); transition: all 0.15s; }
+.filters button:hover { color: var(--text); }
+.filters button.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+main { padding: 36px 56px 220px; max-width: 1100px; }
+header.hero { margin-bottom: 36px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+header.hero h1 { font-size: 26px; margin-bottom: 10px; letter-spacing: -0.01em; }
+header.hero .meta { font-size: 13px; color: var(--text-dim); font-family: var(--mono); }
+header.hero .meta b { color: var(--text); }
+section.s { margin-bottom: 56px; }
+section.s > h2 { font-size: 21px; margin-bottom: 6px; }
+section.s > .lede { font-size: 14px; color: var(--text-dim); margin-bottom: 22px; max-width: 760px; }
+.item { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin-bottom: 14px; border-left: 4px solid transparent; box-shadow: var(--shadow-sm); transition: border-color 0.15s, box-shadow 0.15s; }
+.item:hover { border-color: var(--border-hi); }
+.item.state-accept { border-left-color: var(--accept); }
+.item.state-question { border-left-color: var(--question); }
+.item.state-modify { border-left-color: var(--modify); }
+.item.state-reject { border-left-color: var(--reject); opacity: 0.7; }
+.item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+.item-head-left { flex: 1; min-width: 280px; }
+.item-id { font-family: var(--mono); font-size: 11px; color: var(--text-faint); display: block; margin-bottom: 4px; }
+.item-title { font-size: 16px; font-weight: 600; }
+.item-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.action { background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text-dim); padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.15s; font-family: var(--mono); user-select: none; }
+.action:hover { color: var(--text); border-color: var(--border-hi); }
+.action.on.accept { background: var(--accept); color: white; border-color: var(--accept); font-weight: 700; }
+.action.on.question { background: var(--question); color: white; border-color: var(--question); font-weight: 700; }
+.action.on.modify { background: var(--modify); color: white; border-color: var(--modify); font-weight: 700; }
+.action.on.reject { background: var(--reject); color: white; border-color: var(--reject); font-weight: 700; }
+.item-body { color: var(--text-dim); font-size: 14px; }
+.item-body code { background: var(--bg-elev-2); padding: 2px 5px; border-radius: 3px; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+.item-body b, .item-body strong { color: var(--text); font-weight: 600; }
+.item-body ul, .item-body ol { margin-left: 20px; margin-top: 6px; margin-bottom: 6px; }
+.item-body li { margin-bottom: 4px; }
+.item-body p { margin-bottom: 8px; }
+.item-body p:last-child { margin-bottom: 0; }
+.item-body pre { background: var(--bg-elev-2); padding: 12px; border-radius: 6px; margin: 8px 0; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.5; border: 1px solid var(--border); }
+.item-body table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }
+.item-body th, .item-body td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+.item-body th { background: var(--bg-elev-2); font-weight: 600; }
+.item-body ol.options, .item-body ul.options { list-style: none; margin: 8px 0 4px; padding: 0; }
+.item-body .option { background: var(--bg-elev-2); border: 1px solid var(--border); border-left: 3px solid transparent; padding: 9px 13px; border-radius: 6px; margin-bottom: 6px; font-size: 13.5px; line-height: 1.55; color: var(--text-dim); }
+.item-body .option.recommended { border-left-color: var(--accept); background: rgba(5,150,105,0.06); color: var(--text); }
+.item-body .option b { color: var(--text); font-weight: 700; }
+.item-body .option .rec-mark { color: var(--accept); font-weight: 700; margin-right: 4px; }
+.item-comment { margin-top: 12px; }
+.item-comment textarea { width: 100%; background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 6px; font-family: var(--sans); font-size: 13px; line-height: 1.55; resize: vertical; min-height: 56px; transition: border 0.15s; }
+.item-comment textarea:focus { outline: none; border-color: var(--modify); }
+.item-comment .hint { font-size: 11px; color: var(--text-faint); margin-top: 4px; font-family: var(--mono); }
+.item-annotations { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.annotation { background: var(--bg-elev-2); border-left: 3px solid var(--modify); border-radius: 4px; padding: 6px 10px; font-size: 12px; line-height: 1.5; }
+.annotation .a-quote { color: var(--text-dim); font-style: italic; }
+.annotation .a-quote::before { content: '"'; } .annotation .a-quote::after { content: '"'; }
+.annotation .a-note { color: var(--text); margin-top: 2px; }
+.annotation .a-del { float: right; cursor: pointer; color: var(--text-faint); border: none; background: none; font-size: 12px; }
+.annot-pop { position: absolute; z-index: 50; background: var(--bg-elev); border: 1px solid var(--border-hi); border-radius: 8px; box-shadow: var(--shadow-md); padding: 8px; width: 240px; }
+.annot-pop textarea { width: 100%; box-sizing: border-box; font-family: var(--sans); font-size: 12px; border: 1px solid var(--border); border-radius: 4px; padding: 6px; resize: vertical; min-height: 40px; }
+.annot-pop .ap-row { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+.annot-pop button { font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); background: var(--bg-elev-2); color: var(--text); }
+.annot-pop button.ap-add { background: var(--modify); color: #fff; border-color: var(--modify); }
+.export-bar { position: fixed; bottom: 0; left: 280px; right: 0; background: rgba(255,255,255,0.95); border-top: 1px solid var(--border-hi); padding: 14px 56px; display: flex; gap: 16px; align-items: center; justify-content: space-between; z-index: 100; backdrop-filter: blur(12px); }
+.summary { display: flex; gap: 20px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); flex-wrap: wrap; }
+.summary span { display: inline-flex; align-items: center; gap: 4px; }
+.summary b { font-size: 14px; margin-left: 2px; }
+.summary .c-accept b { color: var(--accept); }
+.summary .c-question b { color: var(--question); }
+.summary .c-modify b { color: var(--modify); }
+.summary .c-reject b { color: var(--reject); }
+.export-buttons { display: flex; gap: 8px; flex-shrink: 0; }
+.export-buttons button { background: var(--modify); color: white; border: none; padding: 9px 14px; border-radius: 7px; font-size: 12.5px; cursor: pointer; font-family: var(--mono); font-weight: 600; transition: all 0.15s; }
+.export-buttons button.secondary { background: var(--bg-elev-2); color: var(--text); border: 1px solid var(--border); }
+.export-buttons button:hover { transform: translateY(-1px); opacity: 0.92; }
+.toast { position: fixed; top: 24px; right: 24px; background: var(--accept); color: #052e1e; padding: 12px 18px; border-radius: 8px; font-family: var(--mono); font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.2s, transform 0.2s; transform: translateY(-10px); z-index: 200; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; align-items: center; justify-content: center; padding: 32px; }
+.modal.show { display: flex; }
+.modal-content { background: var(--bg-elev); border: 1px solid var(--border-hi); border-radius: 12px; max-width: 920px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: var(--shadow-md); }
+.modal-head { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-head h3 { font-size: 14px; }
+.modal-head .modal-actions { display: flex; gap: 8px; }
+.modal-head button { background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text); cursor: pointer; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-family: var(--mono); }
+.modal-head button.primary { background: var(--modify); border-color: var(--modify); color: white; }
+.modal-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+.modal-body textarea { width: 100%; min-height: 480px; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 14px; border-radius: 6px; font-family: var(--mono); font-size: 12.5px; line-height: 1.65; resize: vertical; }
+/* inline term + hover tooltip (hybrid glossary — term is a marked span, NOT a link) */
+.term { position: relative; border-bottom: 1px dotted var(--glossary); cursor: help; }
+.term > .tip {
+  position: absolute; left: 0; top: 100%; z-index: 50;
+  width: max-content; max-width: min(340px, 80vw);
+  background: var(--text); color: #f9fafb;
+  font-family: var(--sans); font-size: 12.5px; line-height: 1.5; font-weight: 400;
+  padding: 8px 11px; border-radius: 7px; box-shadow: var(--shadow-md);
+  white-space: normal; text-align: left;
+  visibility: hidden; opacity: 0; transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease; pointer-events: none;
+}
+.term:hover > .tip, .term:focus-within > .tip { visibility: visible; opacity: 1; transform: translateY(0); pointer-events: auto; }
+.term > .tip a { color: #93c5fd; text-decoration: none; font-weight: 600; white-space: nowrap; margin-left: 6px; }
+.term > .tip a:hover { text-decoration: underline; }
+
+/* central glossary section (📖 용어사전) — decoupled from review machinery (uses .glossary-entry, never .item) */
+.glossary-section .glossary-entry { background: var(--bg-elev); border: 1px solid var(--border); border-left: 4px solid var(--glossary); border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; box-shadow: var(--shadow-sm); scroll-margin-top: 20px; }
+.glossary-section .glossary-entry:target { box-shadow: 0 0 0 3px rgba(13,148,136,0.18); }
+.glossary-section .g-term { font-weight: 700; color: var(--glossary); font-size: 15px; margin-bottom: 6px; }
+.glossary-section .g-desc { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+.glossary-section .g-desc code { background: var(--bg-elev-2); padding: 2px 5px; border-radius: 3px; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+.glossary-section .g-back { display: inline-block; margin-top: 8px; font-family: var(--mono); font-size: 12px; color: var(--text-faint); text-decoration: none; }
+.glossary-section .g-back:hover { color: var(--text-dim); }
+
+.depth-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-family:var(--mono); font-size:11px; font-weight:600; }
+.depth-easy   { background: rgba(5,150,105,0.10); color: #047857; }
+.depth-middle { background: rgba(79,70,229,0.10); color: #4338ca; }
+.depth-hard   { background: rgba(220,38,38,0.10); color: #b91c1c; }
+@media (max-width: 980px) {
+  body { grid-template-columns: 1fr; }
+  aside { position: static; max-height: none; }
+  main { padding: 24px 20px 240px; }
+  .export-bar { left: 0; padding: 12px 16px; flex-direction: column; gap: 10px; align-items: stretch; }
+}
+
+/* Mermaid 다이어그램 컨테이너 */
+.mermaid { display:flex; justify-content:center; margin:14px 0; }
+.mermaid svg { max-width:100%; height:auto; }
+.mermaid:not([data-processed]) { white-space:pre; font-family:'JetBrains Mono',monospace;
+  font-size:12px; color:#6b7280; background:#f3f4f6; padding:10px; border-radius:6px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js" integrity="sha384-yQ4mmBBT+vhTAwjFH0toJXNYJ6O4usWnt6EPIdWwrRvx2V/n5lXuDZQwQFeSFydF" crossorigin="anonymous"></script> <!-- pragma: allowlist secret (SRI integrity 해시는 비밀이 아님) -->
+</head>
+<body>
+<aside>
+  <h2>Sections</h2>
+  <ol id="toc"></ol>
+  <h2>Filter</h2>
+  <div class="filters">
+    <button data-filter="all" class="active" title="전체 보기">All</button>
+    <button data-filter="pending" title="아직 결정하지 않은 항목만 보기">Pending</button>
+    <button data-filter="accept" title="👍 채택 — 그대로 진행">👍</button>
+    <button data-filter="question" title="🤔 의문 — 추가 명세·예시·trade-off 보강 후 재제안">🤔</button>
+    <button data-filter="modify" title="🔁 수정 — 코멘트 반영, 변경 전후 diff 형태로">🔁</button>
+    <button data-filter="reject" title="❌ 거절 — risk surface 1-2개 + minimal alternative 1개">❌</button>
+  </div>
+</aside>
+<main>
+  <header class="hero" id="top">
+    <h1>온톨로지 활용 제안 — 필요한가 / 어떻게 쓰나 — Interactive Review</h1>
+    <div class="meta">
+      <b id="total-count">0</b> reviewable items ·
+      <span class="depth-badge depth-middle">Depth: middle</span> ·
+      피드백 자동 저장 (LocalStorage) ·
+      저장: <span id="last-saved">—</span>
+    </div>
+  </header>
+  <div id="sections"></div>
+</main>
+<div class="export-bar">
+  <div class="summary">
+    <span class="c-accept">👍 채택<b id="c-accept">0</b></span>
+    <span class="c-question">🤔 의문<b id="c-question">0</b></span>
+    <span class="c-modify">🔁 수정<b id="c-modify">0</b></span>
+    <span class="c-reject">❌ 거절<b id="c-reject">0</b></span>
+    <span>📝 코멘트<b id="c-comment">0</b></span>
+    <span>⏳ 미결<b id="c-pending">0</b></span>
+  </div>
+  <div class="export-buttons">
+    <button class="secondary" id="btn-reset">🗑 초기화</button>
+    <button class="secondary" id="btn-export-md">📋 Markdown</button>
+    <button id="btn-export-prompt">📋 Copy as next prompt</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-head">
+      <h3 id="modal-title">Export</h3>
+      <div class="modal-actions">
+        <button id="modal-copy" class="primary">📋 클립보드로 복사</button>
+        <button id="modal-close">닫기</button>
+      </div>
+    </div>
+    <div class="modal-body"><textarea id="modal-text" readonly></textarea></div>
+  </div>
+</div>
+<script>
+const STORAGE_KEY = 'claude-review-2026-11-01-ontology-adoption-proposal';
+/*
+ * SECURITY NOTE: REVIEW_DATA is authored entirely by the agent (trusted content).
+ * Item body HTML is generated markup — no user input is passed through createContextualFragment.
+ * User comments are read/written via textarea.value only (never rendered as HTML).
+ */
+const REVIEW_DATA = [{"id": "s1", "title": "1. 근거 (context, 결정 대상 아님)", "lede": "출처: 단테, \"온톨로지, 꼭 써야 할까?\" (2026-10-29). 기존 vault 노트 \"온톨로지와 지식 그래프\"의 결론(최소 실행 가능 온톨로지)과 일치. 아래 수치는 이후 섹션 판정의 근거이며 채택/거절 항목이 아니다.", "ctx": "<style>\n.ctx-block{margin:0 0 22px}\n.ctx-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 20px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.06)}\n.ctx-card h3{font-size:15px;margin-bottom:8px;color:#111827}\n.ctx-card p{font-size:13.5px;color:#4b5563;margin-bottom:8px}\n.ctx-card table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}\n.ctx-card th,.ctx-card td{border:1px solid #e5e7eb;padding:6px 9px;text-align:left}\n.ctx-card th{background:#f3f4f6}\n.ctx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}\n.ctx-verdict{background:rgba(5,150,105,.06);border-left:3px solid #059669;padding:9px 13px;border-radius:6px;font-size:13.5px;color:#111827}\n.ctx-sig{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:8px}\n.ctx-sig div{background:#f3f4f6;border-radius:6px;padding:8px 10px;font-size:12.5px;color:#374151}\n</style><style>.bar-s1a{transform-box:fill-box;transform-origin:left center;animation:grow-s1a .9s ease-out both}@keyframes grow-s1a{from{transform:scaleX(0)}to{transform:scaleX(1)}}</style><style>.bar-s1b{transform-box:fill-box;transform-origin:left center;animation:grow-s1b .9s ease-out both}@keyframes grow-s1b{from{transform:scaleX(0)}to{transform:scaleX(1)}}</style>\n<div class=\"ctx-card\"><h3>정의</h3>\n<p><span class=\"term\" tabindex=\"0\">온톨로지(ontology)<span class=\"tip\">온톨로지(ontology): 개념·속성·관계·규칙을 기계가 읽을 수 있게 적은 사전. <a href=\"#g-ontology\">상세↗</a></span></span>는 개념(concept)·속성(attribute)·관계(relation)·규칙(rule)을 기계가 읽을 수 있게 적은 \"관계와 규칙이 붙은 사전\"이다.\n계단: 용어집(glossary) → 분류 체계(taxonomy) → 온톨로지 → <span class=\"term\" tabindex=\"0\">지식 그래프(knowledge graph)<span class=\"tip\">지식 그래프(knowledge graph): 온톨로지 틀에 실제 사실을 채운 그래프. <a href=\"#g-knowledge-graph\">상세↗</a></span></span>.</p></div>\n\n<div class=\"ctx-grid\">\n<div class=\"ctx-card\"><h3>실험 A. 작은 코딩 과제</h3>\n<p>따릉이 요금 계산, 숨은 테스트 28개, sonnet, 3회 평균.</p>\n<p><b>정답률(%)</b></p><svg viewBox=\"0 0 370 110\" width=\"100%\" style=\"max-width:420px;margin:6px 0\" role=\"img\" aria-label=\"실험 A 정답률\"><text x=\"0\" y=\"15\" font-size=\"11\" fill=\"#4b5563\">과제만</text><rect class=\"bar-s1a\" x=\"118\" y=\"4\" width=\"121\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"244\" y=\"15\" font-size=\"10.5\" fill=\"#374151\">71%</text><text x=\"0\" y=\"41\" font-size=\"11\" fill=\"#4b5563\">온톨로지만</text><rect class=\"bar-s1a\" x=\"118\" y=\"30\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"293\" y=\"41\" font-size=\"10.5\" fill=\"#374151\">100%</text><text x=\"0\" y=\"67\" font-size=\"11\" fill=\"#4b5563\">PRD+SDD만</text><rect class=\"bar-s1a\" x=\"118\" y=\"56\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"293\" y=\"67\" font-size=\"10.5\" fill=\"#374151\">100%</text><text x=\"0\" y=\"93\" font-size=\"11\" fill=\"#4b5563\">둘 다</text><rect class=\"bar-s1a\" x=\"118\" y=\"82\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"293\" y=\"93\" font-size=\"10.5\" fill=\"#374151\">100%</text></svg>\n<p><b>비용(USD)</b></p><svg viewBox=\"0 0 370 136\" width=\"100%\" style=\"max-width:420px;margin:6px 0\" role=\"img\" aria-label=\"실험 A 비용\"><text x=\"0\" y=\"15\" font-size=\"11\" fill=\"#4b5563\">온톨로지만</text><rect class=\"bar-s1a\" x=\"118\" y=\"4\" width=\"130\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"253\" y=\"15\" font-size=\"10.5\" fill=\"#374151\">$0.209</text><text x=\"0\" y=\"41\" font-size=\"11\" fill=\"#4b5563\">PRD+SDD만</text><rect class=\"bar-s1a\" x=\"118\" y=\"30\" width=\"135\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"258\" y=\"41\" font-size=\"10.5\" fill=\"#374151\">$0.217</text><text x=\"0\" y=\"67\" font-size=\"11\" fill=\"#4b5563\">둘 다</text><rect class=\"bar-s1a\" x=\"118\" y=\"56\" width=\"148\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"271\" y=\"67\" font-size=\"10.5\" fill=\"#374151\">$0.238</text><text x=\"0\" y=\"93\" font-size=\"11\" fill=\"#4b5563\">둘 다 + 값 어긋남</text><rect class=\"bar-s1a\" x=\"118\" y=\"82\" width=\"158\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"281\" y=\"93\" font-size=\"10.5\" fill=\"#374151\">$0.253</text><text x=\"0\" y=\"119\" font-size=\"11\" fill=\"#4b5563\">가리키기</text><rect class=\"bar-s1a\" x=\"118\" y=\"108\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"293\" y=\"119\" font-size=\"10.5\" fill=\"#374151\">$0.273</text></svg>\n<table><tr><th>조건</th><th>정답률</th><th>비용</th><th>시간</th></tr>\n<tr><td>과제만</td><td>71%</td><td>-</td><td>-</td></tr>\n<tr><td>온톨로지만</td><td>100%</td><td>0.209</td><td>27s</td></tr>\n<tr><td>PRD+SDD만</td><td>100%</td><td>0.217</td><td>27s</td></tr>\n<tr><td>둘 다</td><td>100%</td><td>0.238</td><td>35s</td></tr>\n<tr><td>둘 다 + 값 어긋남(drift)</td><td>100%</td><td>0.253</td><td>턴 10회</td></tr>\n<tr><td>가리키기(SDD가 R번호만 참조)</td><td>100%</td><td>0.273</td><td>50s</td></tr></table>\n<div class=\"ctx-verdict\">지식을 하나라도 주면 만점. 둘 다 주면 정확도 동일, 비용 +10~14%, 시간 +30%. 같은 사실의 중복 기록은 손해.</div>\n<p style=\"margin-top:8px\">보강 근거: AGENTS.md 평가 논문(2026) 성공률 동일·비용 +20%, 그리고 <span class=\"term\" tabindex=\"0\">Context Rot<span class=\"tip\">Context Rot: 입력이 길어질수록 모델 성능이 불안정해지는 현상. <a href=\"#g-context-rot\">상세↗</a></span></span>(입력이 길수록 단순 작업도 불안정).</p>\n<p><b>가리키기의 함정.</b> SDD에 \"가격은 ontology.md를 유일한 출처로 쓴다\"고 적었더니 Claude가 런타임에 ontology.md를 파싱하는 코드를 작성했다. 설명 문서가 프로그램 부품이 된 것이다. 해법은 값을 기계가 읽는 파일 한 곳(JSON/enum)에 두는 것(영상에서 미측정).</p>\n</div>\n\n<div class=\"ctx-card\"><h3>실험 B. 도메인이 두꺼운 보험 DB 챗봇</h3>\n<p>테이블 13개, 질문 44개 × 4모드 × 3회.</p>\n<p><b>전체 정답률(%)</b></p><svg viewBox=\"0 0 370 110\" width=\"100%\" style=\"max-width:420px;margin:6px 0\" role=\"img\" aria-label=\"실험 B 정답률\"><text x=\"0\" y=\"15\" font-size=\"11\" fill=\"#4b5563\">schema만</text><rect class=\"bar-s1b\" x=\"118\" y=\"4\" width=\"105\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"228\" y=\"15\" font-size=\"10.5\" fill=\"#374151\">62%</text><text x=\"0\" y=\"41\" font-size=\"11\" fill=\"#4b5563\">+ 공개 OWL + R2RML</text><rect class=\"bar-s1b\" x=\"118\" y=\"30\" width=\"131\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"254\" y=\"41\" font-size=\"10.5\" fill=\"#374151\">77%</text><text x=\"0\" y=\"67\" font-size=\"11\" fill=\"#4b5563\">+ 데이터 설명서</text><rect class=\"bar-s1b\" x=\"118\" y=\"56\" width=\"126\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"249\" y=\"67\" font-size=\"10.5\" fill=\"#374151\">74%</text><text x=\"0\" y=\"93\" font-size=\"11\" fill=\"#4b5563\">+ 직접 구축 온톨로지</text><rect class=\"bar-s1b\" x=\"118\" y=\"82\" width=\"139\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"262\" y=\"93\" font-size=\"10.5\" fill=\"#374151\">82%</text></svg>\n<p><b>다중 조인 쉬운 질문 정답률(%)</b></p><svg viewBox=\"0 0 370 110\" width=\"100%\" style=\"max-width:420px;margin:6px 0\" role=\"img\" aria-label=\"실험 B 다중 조인\"><text x=\"0\" y=\"15\" font-size=\"11\" fill=\"#4b5563\">schema만</text><rect class=\"bar-s1b\" x=\"118\" y=\"4\" width=\"63\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"186\" y=\"15\" font-size=\"10.5\" fill=\"#374151\">37%</text><text x=\"0\" y=\"41\" font-size=\"11\" fill=\"#4b5563\">+ 공개 OWL + R2RML</text><rect class=\"bar-s1b\" x=\"118\" y=\"30\" width=\"97\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"220\" y=\"41\" font-size=\"10.5\" fill=\"#374151\">57%</text><text x=\"0\" y=\"67\" font-size=\"11\" fill=\"#4b5563\">+ 데이터 설명서</text><rect class=\"bar-s1b\" x=\"118\" y=\"56\" width=\"90\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"213\" y=\"67\" font-size=\"10.5\" fill=\"#374151\">53%</text><text x=\"0\" y=\"93\" font-size=\"11\" fill=\"#4b5563\">+ 직접 구축 온톨로지</text><rect class=\"bar-s1b\" x=\"118\" y=\"82\" width=\"153\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"276\" y=\"93\" font-size=\"10.5\" fill=\"#374151\">90%</text></svg>\n<p><b>질문당 비용(USD)</b></p><svg viewBox=\"0 0 370 110\" width=\"100%\" style=\"max-width:420px;margin:6px 0\" role=\"img\" aria-label=\"실험 B 비용\"><text x=\"0\" y=\"15\" font-size=\"11\" fill=\"#4b5563\">schema만</text><rect class=\"bar-s1b\" x=\"118\" y=\"4\" width=\"78\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"201\" y=\"15\" font-size=\"10.5\" fill=\"#374151\">$0.023</text><text x=\"0\" y=\"41\" font-size=\"11\" fill=\"#4b5563\">+ 공개 OWL + R2RML</text><rect class=\"bar-s1b\" x=\"118\" y=\"30\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"293\" y=\"41\" font-size=\"10.5\" fill=\"#374151\">$0.05</text><text x=\"0\" y=\"67\" font-size=\"11\" fill=\"#4b5563\">+ 데이터 설명서</text><rect class=\"bar-s1b\" x=\"118\" y=\"56\" width=\"112\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"235\" y=\"67\" font-size=\"10.5\" fill=\"#374151\">$0.033</text><text x=\"0\" y=\"93\" font-size=\"11\" fill=\"#4b5563\">+ 직접 구축 온톨로지</text><rect class=\"bar-s1b\" x=\"118\" y=\"82\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"293\" y=\"93\" font-size=\"10.5\" fill=\"#374151\">$0.05</text></svg>\n<table><tr><th>모드</th><th>정답률</th><th>다중 조인</th><th>비용</th></tr>\n<tr><td>schema.ddl만</td><td>62%</td><td>37%</td><td>0.023</td></tr>\n<tr><td>+ 공개 OWL + <span class=\"term\" tabindex=\"0\">R2RML<span class=\"tip\">R2RML: 관계형 DB 테이블을 온톨로지 개념에 대응시키는 매핑 표준. <a href=\"#g-r2rml\">상세↗</a></span></span> 매핑</td><td>77%</td><td>57%</td><td>~0.05</td></tr>\n<tr><td>+ 사람 말 데이터 설명서</td><td>74%</td><td>53%</td><td>0.033</td></tr>\n<tr><td>+ Claude 직접 구축 온톨로지</td><td>82%</td><td>90%</td><td>~0.05</td></tr></table>\n<div class=\"ctx-verdict\">효과의 원천은 형식(OWL)이 아니라 검증된 매핑. 직접 구축은 DB를 조회해 실제 코드값만 적고, 데이터의 실제 모양을 적고, 자기 질문을 SQL로 돌려 미리 고쳤다. 부산물로 데이터 이상(잘못 연결된 청구)도 발견.</div>\n<p style=\"margin-top:8px\">2023년 연구(GPT-4): SQL 직접 16% → 지식 그래프 54%. 모델이 좋아져도 \"AG = 대리인\" 같은 조직 고유 약속은 누군가 알려줘야 한다.</p>\n</div>\n</div>\n\n<div class=\"ctx-card\"><h3>영상의 결론: 투자 신호 4가지</h3>\n<div class=\"ctx-sig\"><div>1. 테이블이 많아 여러 번 조인해야 답이 나옴</div><div>2. 코드값·약어가 많음</div><div>3. 한 칸이 여러 뜻(금액 칸 하나에 4종류)</div><div>4. 여러 팀·시스템이 같은 말을 맞춰야 함</div></div>\n<p style=\"margin-top:10px\">시작 순서: 데이터 설명서 → 역량 질문으로 계속 채점 → 여러 시스템이 같은 말을 써야 할 때 정식 온톨로지 + 매핑. 프로젝트 크기별: 작음 = SDD Key Entities + 규칙은 테스트 / 중간 = 용어·규칙 1파일 / 큼 = 정식 온톨로지 + 담당자 + 기계 검사. 꼭 지켜야 하는 규칙은 글이 아니라 검사(테스트·hook)로 둔다.</p></div>\n", "items": []}, {"id": "s2", "title": "2. 상황별 판정", "lede": "상황 유형 3가지에 대해 온톨로지를 둘지 결정한다. 소속·역할은 단정하지 않고 유형별로 판정.", "items": [{"id": "s2-1", "title": "코딩 프로젝트(SDD·TDD): 온톨로지 도입 수준", "body": "<p>코딩 프로젝트(SDD·TDD·superpowers 워크플로우)에 별도 온톨로지를 둘지 결정. 이미 \"스펙 + 테스트\" 구조라서 영상의 작은 프로젝트 권고와 같다. 조건별 비용은 아래 차트.</p>\n<style>.bar-s2-1{transform-box:fill-box;transform-origin:left center;animation:grow-s2-1 .9s ease-out both}@keyframes grow-s2-1{from{transform:scaleX(0)}to{transform:scaleX(1)}}</style><svg viewBox=\"0 0 370 110\" width=\"100%\" style=\"max-width:420px;margin:6px 0\" role=\"img\" aria-label=\"조건별 비용\"><text x=\"0\" y=\"15\" font-size=\"11\" fill=\"#4b5563\">온톨로지만</text><rect class=\"bar-s2-1\" x=\"118\" y=\"4\" width=\"130\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"253\" y=\"15\" font-size=\"10.5\" fill=\"#374151\">$0.209</text><text x=\"0\" y=\"41\" font-size=\"11\" fill=\"#4b5563\">둘 다</text><rect class=\"bar-s2-1\" x=\"118\" y=\"30\" width=\"148\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"271\" y=\"41\" font-size=\"10.5\" fill=\"#374151\">$0.238</text><text x=\"0\" y=\"67\" font-size=\"11\" fill=\"#4b5563\">둘 다 + drift</text><rect class=\"bar-s2-1\" x=\"118\" y=\"56\" width=\"158\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"281\" y=\"67\" font-size=\"10.5\" fill=\"#374151\">$0.253</text><text x=\"0\" y=\"93\" font-size=\"11\" fill=\"#4b5563\">가리키기</text><rect class=\"bar-s2-1\" x=\"118\" y=\"82\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"293\" y=\"93\" font-size=\"10.5\" fill=\"#374151\">$0.273</text></svg>\n<ol class=\"options\"><li class=\"option recommended\"><span class=\"rec-mark\">✅ 권장</span><b>A:</b> 온톨로지를 두지 않는다. spec에 <span class=\"term\" tabindex=\"0\">Key Entities<span class=\"tip\">Key Entities: 스펙에 두는 핵심 대상과 관계 표 1개. <a href=\"#g-key-entities\">상세↗</a></span></span> 표 1개만 두고(tdd-plan의 도메인 규칙 0층 자리), 규칙은 실패하는 테스트로 고정한다. CLAUDE.md에 온톨로지 섹션을 추가하지 않는다. <i>정확도는 스펙 하나로 만점이고 중복 기록일수록 차트 우측처럼 비용만 증가한다.</i></li><li class=\"option\"><b>B:</b> 용어·규칙만 모은 가벼운 온톨로지 1파일을 두고 spec은 참조만 한다. 중간 규모에서만 정당화되며 지금 프로젝트에는 과투자.</li><li class=\"option\"><b>C:</b> 정식 온톨로지 + 담당자 + 기계 검사. 큰 프로젝트용이며 단일 팀 코딩에는 해당 없음.</li></ol>"}, {"id": "s2-2", "title": "회사 도메인 데이터 질의: 다음 투자 대상", "body": "<p>회사 도메인 데이터 질의(도메인 문서 검색 또는 DB에 SQL로 묻는 챗봇)의 다음 투자를 정한다. 현재 이미 가장 싼 계단(사람 말 설명서)에 있다. 아래는 옵션별 대응 수치(정답률·질문당 비용).</p>\n<style>.bar-s2-2{transform-box:fill-box;transform-origin:left center;animation:grow-s2-2 .9s ease-out both}@keyframes grow-s2-2{from{transform:scaleX(0)}to{transform:scaleX(1)}}</style>\n<p style=\"margin:4px 0 0\"><b>정답률(%)</b></p>\n<svg viewBox=\"0 0 370 84\" width=\"100%\" style=\"max-width:420px;margin:6px 0\" role=\"img\" aria-label=\"옵션별 정답률\"><text x=\"0\" y=\"15\" font-size=\"11\" fill=\"#4b5563\">A. 설명서 유지</text><rect class=\"bar-s2-2\" x=\"118\" y=\"4\" width=\"126\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"249\" y=\"15\" font-size=\"10.5\" fill=\"#374151\">74%</text><text x=\"0\" y=\"41\" font-size=\"11\" fill=\"#4b5563\">B. 직접 구축 1파일</text><rect class=\"bar-s2-2\" x=\"118\" y=\"30\" width=\"139\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"262\" y=\"41\" font-size=\"10.5\" fill=\"#374151\">82%</text><text x=\"0\" y=\"67\" font-size=\"11\" fill=\"#4b5563\">C. 공개 OWL + R2RML</text><rect class=\"bar-s2-2\" x=\"118\" y=\"56\" width=\"131\" height=\"15\" rx=\"3\" fill=\"#4f46e5\"/><text x=\"254\" y=\"67\" font-size=\"10.5\" fill=\"#374151\">77%</text></svg>\n<p style=\"margin:4px 0 0\"><b>질문당 비용(USD)</b></p>\n<svg viewBox=\"0 0 370 84\" width=\"100%\" style=\"max-width:420px;margin:6px 0\" role=\"img\" aria-label=\"옵션별 비용\"><text x=\"0\" y=\"15\" font-size=\"11\" fill=\"#4b5563\">A. 설명서 유지</text><rect class=\"bar-s2-2\" x=\"118\" y=\"4\" width=\"112\" height=\"15\" rx=\"3\" fill=\"#059669\"/><text x=\"235\" y=\"15\" font-size=\"10.5\" fill=\"#374151\">$0.033</text><text x=\"0\" y=\"41\" font-size=\"11\" fill=\"#4b5563\">B. 직접 구축 1파일</text><rect class=\"bar-s2-2\" x=\"118\" y=\"30\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"293\" y=\"41\" font-size=\"10.5\" fill=\"#374151\">$0.05</text><text x=\"0\" y=\"67\" font-size=\"11\" fill=\"#4b5563\">C. 공개 OWL + R2RML</text><rect class=\"bar-s2-2\" x=\"118\" y=\"56\" width=\"170\" height=\"15\" rx=\"3\" fill=\"#dc2626\"/><text x=\"293\" y=\"67\" font-size=\"10.5\" fill=\"#374151\">$0.05</text></svg>\n<p>투자 신호가 있을 법한 지점(사실이 아니라 검증할 질문): 주문·결제·배송 상태 코드, 마일리지 원장 한 테이블에 적립·사용·소멸·취소 혼재, OMS와 WMS가 같은 단어(수량·취소·반품)를 다른 뜻으로 사용, 주문→주문상품→결제→배송→정산 5단 조인.</p>\n<ol class=\"options\"><li class=\"option recommended\"><span class=\"rec-mark\">✅ 권장</span><b>A:</b> 온톨로지를 새로 만들지 않는다. 현재 설명서를 유지하고, 다음 투자는 <span class=\"term\" tabindex=\"0\">역량 질문(competency questions)<span class=\"tip\">역량 질문(competency questions): 시스템이 답해야 하는 질문 목록. 정답 SQL과 함께 시험지로 쓴다. <a href=\"#g-competency-questions\">상세↗</a></span></span> + 채점기(시험지) 구축으로 한정한다. <i>정답률 차이(차트)는 형식이 아니라 검증된 매핑에서 나오므로 먼저 측정 수단이 필요하다.</i></li><li class=\"option\"><b>B:</b> 가벼운 온톨로지 1파일을 DB 조회와 질문 검증으로 직접 구축한다. 정답률 최고(차트)이나 채점기 없이 시작하면 효과를 측정할 수 없다.</li><li class=\"option\"><b>C:</b> 공개 OWL + R2RML 기반 정식 온톨로지. 여러 시스템이 같은 어휘를 기계적으로 공유해야 할 때만 정당화된다(현재 해당 없음).</li></ol>"}, {"id": "s2-3", "title": "Obsidian vault: 온톨로지 도입 수준", "body": "<p>Obsidian vault(PKM)에 온톨로지를 둘지 결정. vault는 단일 시스템이고 외부와 어휘를 맞출 필요가 없다. 현재 계단: hierarchical tag = 분류 체계(taxonomy), wikilink 약 7,500개 = 스키마 없는 지식 그래프, vis = 의미 검색.</p>\n<ol class=\"options\"><li class=\"option recommended\"><span class=\"rec-mark\">✅ 권장</span><b>A:</b> 온톨로지를 두지 않는다. 태그 체계 정리(tag-agent, moc-agent)와 vis 검색을 유지한다. <i>관계·규칙을 형식화해도 답할 질문이 없다.</i></li><li class=\"option\"><b>B:</b> 용어·규칙을 모은 가벼운 온톨로지 1파일. 형식화 대상 질문이 없어 유지 비용만 발생한다.</li><li class=\"option\"><b>C:</b> 정식 온톨로지 + 매핑. 외부 시스템 연동이 없는 vault에는 해당 없음.</li></ol>"}]}, {"id": "s3", "title": "3. 회사 데이터 질의 투자 순서", "lede": "\"온톨로지를 만들까\"가 아니라 \"어느 계단까지, 무엇으로 재면서\"의 문제. 모호한 바람 → 사용자 스토리 → 구체적 예시 → 실행 가능한 명세를 데이터에 적용: 설명서 = 명세, 역량 질문 = 인수 테스트.", "items": [{"id": "s3-1", "title": "6단계 투자 순서 채택 여부", "body": "<p>회사 도메인 데이터 질의 투자 순서를 확정한다. 질문 분류는 쉬움/어려움 × 단일 테이블/다중 조인. 설명서 보강은 AI 초안을 허용하고 \"추정\"으로 표시된 곳만 사람이 확인한다.</p>\n<div class=\"mermaid\">\nflowchart TD\n  S1[\"1. 역량 질문 10~20개 + 정답 SQL 작성\"] --&gt; S2[\"2. 채점기 구축 (열 이름·행 순서 무시, 소수 둘째 자리)\"]\n  S2 --&gt; S3[\"3. 기준선 측정: schema만 vs schema + 현재 도메인 문서\"]\n  S3 --&gt; S4[\"4. 틀린 문항의 코드값·조인 경로만 설명서에 추가\"]\n  S4 --&gt; S5[\"5. 재채점\"]\n  S5 --&gt; D{\"정답률이 더 오르는가\"}\n  D -- \"예\" --&gt; S4\n  D -- \"아니오\" --&gt; D2{\"여러 시스템이 같은 어휘를 기계적으로 공유해야 하는가\"}\n  D2 -- \"예\" --&gt; S6[\"6. 정식 온톨로지 + 매핑 (OWL/R2RML 등)\"]\n  D2 -- \"아니오\" --&gt; E[\"설명서 유지, 투자 종료\"]\n</div>\n<ol class=\"options\"><li class=\"option recommended\"><span class=\"rec-mark\">✅ 권장</span><b>A:</b> 위 순서 채택: 설명서 보강 → 역량 질문으로 채점 → 재채점 반복 → 필요할 때만 정식 온톨로지. <i>측정 없이 투자하지 않으므로 단계마다 되돌릴 수 있다.</i></li><li class=\"option\"><b>B:</b> 바로 온톨로지 구축부터 시작. 기준선이 없어 구축 효과를 증명할 수 없다.</li><li class=\"option\"><b>C:</b> 기존 문서를 그대로 유지. 현재 정답률을 모르므로 개선 여부도 판단할 수 없다.</li></ol>"}]}, {"id": "s4", "title": "4. 값의 단일 출처", "lede": "같은 사실의 중복 기록이 가장 비쌌다. 값은 기계가 읽는 파일 한 곳에 두는 원칙을 정한다.", "items": [{"id": "s4-1", "title": "값의 단일 출처 위치", "body": "<p>실험 A의 \"가리키기\" 함정(설명 문서가 런타임 파싱 대상이 됨)을 막을 값의 단일 출처를 정한다. 영상 미측정 권고를 Java 의사 코드로 옮기면 다음과 같다.</p>\n<pre>// fare-table.json 하나가 유일한 출처. 코드·테스트·문서가 모두 이 파일을 읽는다.\nrecord FareTable(Map&lt;PassType, Money&gt; price, Duration unit, Money unitFee) {\n    static FareTable load() {\n        return Json.read(\"fare-table.json\", FareTable.class); // 빌드 타임 또는 기동 시 1회\n    }\n}\n\n// 규칙은 문서가 아니라 테스트로 고정\n@Test void extraFee_is_200won_per_5min() {\n    assertEquals(Money.won(400), fare.extraFee(Duration.ofMinutes(10)));\n}\n\n// 설명 문서(ontology.md)는 \"가격표는 fare-table.json 참조\"라고만 적고 숫자를 적지 않는다.\n// 런타임에 markdown을 파싱하지 않는다.</pre>\n<ol class=\"options\"><li class=\"option recommended\"><span class=\"rec-mark\">✅ 권장</span><b>A:</b> JSON(또는 enum) 한 파일이 유일한 출처. 코드·테스트가 그 파일을 읽고 문서는 파일명만 참조한다. <i>기계가 읽는 형식이 출처이면 파싱 대상 문서가 생기지 않고 drift도 구조적으로 차단된다.</i></li><li class=\"option\"><b>B:</b> 문서(ontology.md)가 출처. 코드가 문서를 파싱하게 되어 설명 문서가 프로그램 부품이 된다(실험 A의 실패 사례).</li><li class=\"option\"><b>C:</b> 코드 상수가 출처. 문서·테스트와 값이 이중 기록되어 drift 위험이 생긴다.</li></ol>"}]}, {"id": "s5", "title": "5. 첫 행동", "lede": "측정 수단이 없으면 이후 투자 판단이 불가능하다.", "items": [{"id": "s5-1", "title": "첫 행동: 역량 질문 10개 + 정답 SQL 작성", "body": "<p>첫 행동을 정한다. 요약 결정표: 코딩 프로젝트는 투자 0, 도메인 질의는 정답률이 멈출 때까지, 다중 시스템 어휘 공유는 측정된 delta 기준, vault는 투자 0.</p>\n<table><tr><th></th><th>단일 테이블</th><th>다중 조인</th></tr>\n<tr><th>쉬움</th><td>예: 상태 코드 값 조회</td><td>예: 주문→결제 2단 조인</td></tr>\n<tr><th>어려움</th><td>예: 원장 한 칸 4종류 구분</td><td>예: 주문→배송→정산 5단 조인</td></tr></table>\n<p>위 4분면에 걸쳐 질문 10개와 정답 SQL을 작성한다(예시는 검증할 질문이며 사실이 아님).</p>\n<ol class=\"options\"><li class=\"option recommended\"><span class=\"rec-mark\">✅ 권장</span><b>A:</b> <span class=\"term\" tabindex=\"0\">역량 질문(competency questions)<span class=\"tip\">역량 질문(competency questions): 시스템이 답해야 하는 질문 목록. 정답 SQL과 함께 시험지로 쓴다. <a href=\"#g-competency-questions\">상세↗</a></span></span> 10개 + 정답 SQL 작성을 첫 행동으로 채택한다. <i>가장 작은 단위로 기준선을 만들고 이후 모든 투자 판단의 측정 수단이 된다.</i></li><li class=\"option\"><b>B:</b> 질문 20개와 채점기까지 한 번에 작성. 범위가 커서 첫 피드백이 늦어진다.</li><li class=\"option\"><b>C:</b> 보류하고 설명서 보강부터 시작. 개선 여부를 측정할 수 없다.</li></ol>"}]}];
+/* Central glossary entries: [{ slug, term, desc }] where desc is agent-authored HTML (trusted).
+ * MUST always be a real array — the builder emits at least [] so this placeholder never stays raw.
+ * Glossary entries are NOT reviewable items: they use .glossary-entry, never .item, so state/counts/export ignore them. */
+const GLOSSARY = [{"slug": "ontology", "term": "온톨로지 (ontology)", "desc": "개념(concept)·속성(attribute)·관계(relation)·규칙(rule)을 기계가 읽을 수 있게 적은 사전. 계단: 용어집 → 분류 체계 → 온톨로지 → 지식 그래프. 형식 예: <code>OWL</code>, <code>R2RML</code> 매핑."}, {"slug": "knowledge-graph", "term": "지식 그래프 (knowledge graph)", "desc": "온톨로지 틀에 실제 사실(인스턴스)을 채운 그래프. 노드는 대상, 간선은 관계. 온톨로지는 스키마, 지식 그래프는 데이터에 해당한다."}, {"slug": "competency-questions", "term": "역량 질문 (competency questions)", "desc": "시스템이 답할 수 있어야 하는 질문의 목록. 정답 SQL과 짝지어 두면 채점 가능한 시험지(인수 테스트)가 된다. 분류: 쉬움/어려움 × 단일 테이블/다중 조인."}, {"slug": "r2rml", "term": "R2RML (RDB to RDF Mapping Language)", "desc": "관계형 DB의 테이블·열을 온톨로지의 개념·속성에 대응시키는 W3C 매핑 표준. 실험 B에서 공개 OWL과 함께 사용된 모드가 77%였다."}, {"slug": "key-entities", "term": "Key Entities", "desc": "SDD(spec 문서)에 두는 핵심 대상과 관계 표 1개. 별도 온톨로지 없이 작은 프로젝트에서 어휘를 고정하는 최소 장치. 규칙은 문서가 아니라 실패하는 테스트로 고정한다."}, {"slug": "context-rot", "term": "Context Rot", "desc": "Chroma 연구가 보고한 현상. 입력(context)이 길어질수록 단순 작업에서도 모델 결과가 불안정해진다. 같은 사실을 여러 문서에 중복 기록하면 입력만 길어져 손해가 된다."}];
+
+/* 인라인 주석: id → [{quote, note}]. 비파괴 — 본문 DOM은 건드리지 않는다. */
+const annotationsMap = new Map();
+
+function getAnnotations(id) { return annotationsMap.get(id) || []; }
+
+function renderAnnotations(itemEl) {
+  const id = itemEl.dataset.id;
+  let box = itemEl.querySelector('.item-annotations');
+  if (!box) { box = document.createElement('div'); box.className = 'item-annotations'; itemEl.querySelector('.item-comment').after(box); }
+  box.textContent = '';
+  getAnnotations(id).forEach((a, i) => {
+    const row = document.createElement('div'); row.className = 'annotation';
+    const del = document.createElement('button'); del.className = 'a-del'; del.textContent = '✕'; del.title = '주석 삭제';
+    del.addEventListener('click', () => { const arr = getAnnotations(id).slice(); arr.splice(i, 1); annotationsMap.set(id, arr); renderAnnotations(itemEl); saveState(); });
+    const q = document.createElement('div'); q.className = 'a-quote'; q.textContent = a.quote;   /* textContent only — never innerHTML */
+    const n = document.createElement('div'); n.className = 'a-note'; n.textContent = a.note;
+    row.append(del, q, n); box.appendChild(row);
+  });
+}
+
+/* 테스트 훅 + UI 공용 진입점 */
+function __addAnnotation(id, quote, note) {
+  if (!quote || !note) return;
+  const arr = getAnnotations(id).slice(); arr.push({ quote, note }); annotationsMap.set(id, arr);
+  const itemEl = document.querySelector(`.item[data-id="${id}"]`);
+  if (itemEl) renderAnnotations(itemEl);
+  saveState();
+}
+window.__addAnnotation = __addAnnotation;
+
+function saveState() {
+  const state = {};
+  document.querySelectorAll('.item').forEach(el => {
+    const id = el.dataset.id;
+    const action = el.dataset.action || '';
+    const comment = el.querySelector('textarea')?.value || '';
+    const annotations = getAnnotations(id);
+    if (action || comment || annotations.length) state[id] = { action, comment, annotations };
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  document.getElementById('last-saved').textContent = new Date().toLocaleTimeString('ko-KR');
+  updateCounts();
+}
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+}
+
+function applyState() {
+  const state = loadState();
+  Object.entries(state).forEach(([id, { action, comment, annotations }]) => {
+    const el = document.querySelector(`.item[data-id="${id}"]`);
+    if (!el) return;
+    if (action) {
+      el.dataset.action = action;
+      el.classList.add(`state-${action}`);
+      el.querySelector(`.action[data-action="${action}"]`)?.classList.add('on', action);
+    }
+    const ta = el.querySelector('textarea');
+    if (ta && comment) ta.value = comment;
+    if (annotations && annotations.length) { annotationsMap.set(id, annotations); renderAnnotations(el); }
+  });
+}
+
+function renderItem(item, secTitle) {
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.dataset.id = item.id;
+
+  const head = document.createElement('div');
+  head.className = 'item-head';
+
+  const left = document.createElement('div');
+  left.className = 'item-head-left';
+  const idSpan = document.createElement('span');
+  idSpan.className = 'item-id';
+  idSpan.textContent = item.id;
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'item-title';
+  titleDiv.textContent = item.title;
+  left.append(idSpan, titleDiv);
+
+  const actions = document.createElement('div');
+  actions.className = 'item-actions';
+  [
+    ['accept',   '👍', '👍 채택 — 그대로 진행'],
+    ['question', '🤔', '🤔 의문 — 추가 명세·예시·trade-off 보강 후 재제안'],
+    ['modify',   '🔁', '🔁 수정 요청 — 코멘트 반영, 변경 전후 diff 형태로'],
+    ['reject',   '❌', '❌ 거절 — risk surface 1-2개 + minimal alternative 1개'],
+  ].forEach(([act, emoji, tip]) => {
+    const btn = document.createElement('button');
+    btn.className = 'action';
+    btn.dataset.action = act;
+    btn.title = tip;
+    btn.textContent = emoji;
+    actions.appendChild(btn);
+  });
+
+  head.append(left, actions);
+
+  /* body: agent-authored HTML via createContextualFragment. <style>/<svg> apply; <script> is forbidden by agent policy (not by this mechanism). Only trusted REVIEW_DATA flows here — comments are read via textarea.value, never rendered as HTML. */
+  const body = document.createElement('div');
+  body.className = 'item-body';
+  const range = document.createRange();
+  range.selectNodeContents(body);
+  body.appendChild(range.createContextualFragment(item.body));
+
+  const comment = document.createElement('div');
+  comment.className = 'item-comment';
+  const ta = document.createElement('textarea');
+  ta.placeholder = '코멘트 (선택). 다른 옵션 선택 시 라벨만 적어도 OK — 예: "B"';
+  ta.rows = 2;
+  const hint = document.createElement('div');
+  hint.className = 'hint';
+  hint.textContent = 'Enter → 저장 · Shift+Enter → 줄바꿈';
+  comment.append(ta, hint);
+
+  div.append(head, body, comment);
+  return div;
+}
+
+function renderSections() {
+  const container = document.getElementById('sections');
+  let total = 0;
+  REVIEW_DATA.forEach(sec => {
+    const secEl = document.createElement('section');
+    secEl.className = 's';
+    secEl.id = sec.id;
+    const h2 = document.createElement('h2');
+    h2.textContent = sec.title;
+    secEl.appendChild(h2);
+    if (sec.lede) {
+      const lede = document.createElement('div');
+      lede.className = 'lede';
+      lede.textContent = sec.lede;
+      secEl.appendChild(lede);
+    }
+    sec.items.forEach(item => { total++; secEl.appendChild(renderItem(item, sec.title)); });
+    container.appendChild(secEl);
+  });
+  document.getElementById('total-count').textContent = total;
+}
+
+function renderTOC() {
+  const toc = document.getElementById('toc');
+  REVIEW_DATA.forEach(sec => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + sec.id;
+    a.textContent = sec.title;
+    li.appendChild(a);
+    toc.appendChild(li);
+  });
+  if (GLOSSARY && GLOSSARY.length) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#glossary';
+    a.textContent = '📖 용어사전';
+    li.appendChild(a);
+    toc.appendChild(li);
+  }
+}
+
+function renderGlossarySection() {
+  if (!GLOSSARY || !GLOSSARY.length) return;
+  const container = document.getElementById('sections');
+  const sec = document.createElement('section');
+  sec.className = 's glossary-section';
+  sec.id = 'glossary';
+
+  const h2 = document.createElement('h2');
+  h2.textContent = '📖 용어사전';
+  sec.appendChild(h2);
+
+  GLOSSARY.forEach(g => {
+    const entry = document.createElement('div');
+    entry.className = 'glossary-entry';
+    entry.id = 'g-' + g.slug;
+
+    const term = document.createElement('div');
+    term.className = 'g-term';
+    term.textContent = g.term;
+
+    /* desc: agent-authored HTML (trusted REVIEW_DATA sibling) — render as fragment for code/emphasis. */
+    const desc = document.createElement('div');
+    desc.className = 'g-desc';
+    const range = document.createRange();
+    range.selectNodeContents(desc);
+    desc.appendChild(range.createContextualFragment(g.desc));
+
+    const back = document.createElement('a');
+    back.className = 'g-back';
+    back.href = '#top';
+    back.textContent = '맨 위로 ↑';
+
+    entry.append(term, desc, back);
+    sec.appendChild(entry);
+  });
+
+  container.appendChild(sec);
+}
+
+function attachEvents() {
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.action');
+    if (!btn) return;
+    const item = btn.closest('.item');
+    const act = btn.dataset.action;
+    const isOn = btn.classList.contains('on');
+    item.querySelectorAll('.action').forEach(b => b.classList.remove('on','accept','question','modify','reject'));
+    item.classList.remove('state-accept','state-question','state-modify','state-reject');
+    if (!isOn) { btn.classList.add('on', act); item.classList.add(`state-${act}`); item.dataset.action = act; }
+    else delete item.dataset.action;
+    saveState();
+  });
+  document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA' && e.target.closest('.item')) saveState(); });
+  // Submit comment on Enter; Shift+Enter inserts newline.
+  // Cmd/Ctrl+Enter kept as secondary submit shortcut for muscle memory.
+  // Guards IME composition (Korean/Japanese/Chinese) to avoid submitting mid-syllable.
+  document.addEventListener('keydown', e => {
+    const ta = e.target;
+    if (ta.tagName !== 'TEXTAREA' || !ta.closest('.item')) return;
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key !== 'Enter') return;
+    if (e.shiftKey) return;
+    e.preventDefault();
+    saveState();
+  });
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    if (confirm('모든 피드백을 초기화할까요?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); }
+  });
+  document.getElementById('btn-export-md').addEventListener('click', () => openExport('md'));
+  document.getElementById('btn-export-prompt').addEventListener('click', () => openExport('prompt'));
+  document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('show'));
+  document.getElementById('modal-copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('modal-text').value).then(() => showToast('클립보드에 복사됐습니다'));
+  });
+  document.querySelectorAll('.filters button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      document.querySelectorAll('.item').forEach(el => {
+        el.style.display = (f === 'all' || (f === 'pending' && !el.dataset.action) || el.dataset.action === f) ? '' : 'none';
+      });
+    });
+  });
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting)
+        document.querySelectorAll('#toc a').forEach(a => a.classList.toggle('current', a.getAttribute('href') === '#' + e.target.id));
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('section.s').forEach(s => observer.observe(s));
+  // 인라인 주석: item body 안의 텍스트 선택 → 팝오버
+  document.addEventListener('mouseup', e => {
+    if (e.target.closest('.annot-pop')) return;   // 팝오버 내부 클릭은 통과(제거 안 함) — 버튼 click 억제 방지
+    document.querySelectorAll('.annot-pop').forEach(p => p.remove());
+    const sel = window.getSelection();
+    const text = sel && sel.toString().trim();
+    if (!text) return;
+    const body = e.target.closest && e.target.closest('.item-body');
+    if (!body) return;
+    const itemEl = body.closest('.item');
+    const pop = document.createElement('div'); pop.className = 'annot-pop';
+    const ta = document.createElement('textarea'); ta.placeholder = '이 인용에 대한 주석…';
+    const row = document.createElement('div'); row.className = 'ap-row';
+    const cancel = document.createElement('button'); cancel.textContent = '취소';
+    const add = document.createElement('button'); add.className = 'ap-add'; add.textContent = '주석 추가';
+    cancel.addEventListener('click', () => pop.remove());
+    add.addEventListener('click', () => { if (ta.value.trim()) __addAnnotation(itemEl.dataset.id, text, ta.value.trim()); pop.remove(); });
+    row.append(cancel, add); pop.append(ta, row);
+    document.body.appendChild(pop);
+    pop.style.left = Math.min(e.pageX, window.scrollX + document.documentElement.clientWidth - 256) + 'px';
+    pop.style.top = (e.pageY + 8) + 'px';
+    ta.focus();
+  });
+}
+
+function updateCounts() {
+  const c = { accept:0, question:0, modify:0, reject:0, comment:0, pending:0 };
+  document.querySelectorAll('.item').forEach(el => {
+    const act = el.dataset.action;
+    if (act) c[act]++; else c.pending++;
+    if (el.querySelector('textarea')?.value.trim() || getAnnotations(el.dataset.id).length) c.comment++;
+  });
+  ['accept','question','modify','reject','comment','pending'].forEach(k => {
+    const el = document.getElementById(`c-${k}`);
+    if (el) el.textContent = c[k];
+  });
+}
+
+function collectByAction() {
+  const g = { accept:[], question:[], modify:[], reject:[], pending:[] };
+  document.querySelectorAll('.item').forEach(el => {
+    const act = el.dataset.action || 'pending';
+    const comment = el.querySelector('textarea')?.value.trim() || '';
+    const secTitle = el.closest('section.s')?.querySelector('h2')?.textContent || '';
+    const annotations = getAnnotations(el.dataset.id);
+    g[act].push({ id: el.dataset.id, title: el.querySelector('.item-title')?.textContent, section: secTitle, comment, annotations });
+  });
+  return g;
+}
+
+function buildMarkdown() {
+  const g = collectByAction();
+  const title = document.querySelector('header.hero h1').textContent;
+  const lines = [`# ${title} — 피드백 (${new Date().toISOString().slice(0,10)})`, ''];
+  [['👍 채택', g.accept],['🤔 의문', g.question],['🔁 수정 요청', g.modify],['❌ 거절', g.reject],['📝 주석/코멘트만', g.pending.filter(i => i.comment || (i.annotations && i.annotations.length))]].forEach(([t,items]) => {
+    if (!items.length) return;
+    lines.push(`## ${t} (${items.length})`);
+    items.forEach(it => {
+      lines.push(`- **[${it.id}] ${it.title}**`);
+      if (it.comment) it.comment.split('\n').forEach(c => lines.push(`  > ${c}`));
+      (it.annotations || []).forEach(a => lines.push(`  · 인용 "${a.quote}" → 주석: ${a.note}`));
+    });
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+function buildPrompt() {
+  const g = collectByAction();
+  const title = document.querySelector('header.hero h1').textContent;
+  const lines = [`다음은 "${title}" 에 대한 피드백입니다.`, ''];
+  [['👍 채택 — 그대로 진행', g.accept],['🤔 의문 — 추가 명세 필요', g.question],['🔁 수정 요청', g.modify],['❌ 거절', g.reject],['📝 주석/코멘트만', g.pending.filter(i => i.comment || (i.annotations && i.annotations.length))]].forEach(([t,items]) => {
+    if (!items.length) return;
+    lines.push(`## ${t} — ${items.length}개`);
+    items.forEach(it => {
+      lines.push(`- [${it.id}] ${it.title}`);
+      if (it.comment) it.comment.split('\n').forEach(c => lines.push(`  > ${c}`));
+      (it.annotations || []).forEach(a => lines.push(`  · 인용 "${a.quote}" → 주석: ${a.note}`));
+    });
+    lines.push('');
+  });
+  lines.push('---','','이 피드백을 반영해서:','',
+    '1. **채택** — 그대로 진행.',
+    '2. **의문** — 추가 명세·예시·trade-off 보강 후 재제안.',
+    '3. **수정** — 코멘트 반영, 변경 전후 diff 형태로.',
+    '4. **거절** — risk surface 1-2개 + minimal alternative 1개.',
+    '5. **다음 액션 한 줄** 추천.','');
+  return lines.join('\n');
+}
+
+function openExport(kind) {
+  const text = kind === 'md' ? buildMarkdown() : buildPrompt();
+  document.getElementById('modal-title').textContent = kind === 'md' ? '📋 Markdown export' : '📋 Copy as next prompt';
+  document.getElementById('modal-text').value = text;
+  document.getElementById('modal').classList.add('show');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+renderTOC(); renderSections(); renderGlossarySection(); applyState(); attachEvents(); updateCounts();
+
+/* Mermaid: head CDN loaded it; render the .mermaid blocks injected by renderSections(). */
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'strict' });
+  try { mermaid.run({ querySelector: '.mermaid' }); }
+  catch (e) { console.error('mermaid.run failed', e); }
+}
+</script>
+<script>
+/* section-level context blocks (REVIEW_DATA[].ctx): rendered above items, not reviewable */
+REVIEW_DATA.forEach(function(sec){ if(!sec.ctx) return; var el=document.getElementById(sec.id); if(!el) return;
+  var div=document.createElement('div'); div.className='ctx-block'; var r=document.createRange(); r.selectNodeContents(div);
+  div.appendChild(r.createContextualFragment(sec.ctx)); var lede=el.querySelector('.lede'); (lede||el.querySelector('h2')).after(div); });
+</script>
+</body>
+</html>

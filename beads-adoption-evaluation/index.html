@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>beads(bd) 도입 평가 — 내 환경에 도움이 되는가 — Explain</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #f7f8fa; --bg-elev: #ffffff; --bg-elev-2: #f3f4f6;
+  --border: #e5e7eb; --border-hi: #d1d5db;
+  --text: #111827; --text-dim: #4b5563; --text-faint: #9ca3af;
+  --summary-clr: #4f46e5; --glossary-clr: #0d9488; --info-clr: #0284c7;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.65; display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+
+/* sidebar */
+aside { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; background: var(--bg-elev); border-right: 1px solid var(--border); padding: 24px 18px; }
+aside h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 14px; font-weight: 600; }
+aside h2:not(:first-child) { margin-top: 24px; }
+aside ol { list-style: none; }
+aside li { margin-bottom: 4px; }
+aside a { color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; justify-content: space-between; padding: 7px 10px; border-radius: 6px; transition: background 0.15s, color 0.15s; }
+aside a:hover { background: var(--bg-elev-2); color: var(--text); }
+aside a.current { background: var(--bg-elev-2); color: var(--text); border-left: 2px solid var(--summary-clr); padding-left: 8px; }
+.toggle-all { margin-top: 16px; }
+.toggle-all button { width: 100%; background: var(--bg-elev-2); color: var(--text-dim); border: 1px solid var(--border); padding: 7px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: var(--mono); transition: all 0.15s; text-align: left; }
+.toggle-all button:hover { color: var(--text); border-color: var(--border-hi); }
+
+/* main */
+main { padding: 36px 56px 80px; max-width: 1100px; }
+header.hero { margin-bottom: 36px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+header.hero h1 { font-size: 26px; margin-bottom: 10px; letter-spacing: -0.01em; }
+header.hero .meta { font-size: 13px; color: var(--text-dim); font-family: var(--mono); }
+header.hero .meta b { color: var(--text); }
+
+/* sections */
+section.s { margin-bottom: 56px; }
+section.s > h2 { font-size: 21px; margin-bottom: 10px; }
+
+/* summary callout */
+.sec-summary { background: rgba(79,70,229,0.06); border: 1px solid rgba(79,70,229,0.2); border-left: 4px solid var(--summary-clr); border-radius: 8px; padding: 12px 18px; margin-bottom: 22px; font-size: 14px; color: var(--text); line-height: 1.6; }
+.sec-summary::before { content: '📌 핵심'; display: block; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--summary-clr); margin-bottom: 6px; letter-spacing: 0.05em; }
+
+/* items */
+.item { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin-bottom: 14px; box-shadow: var(--shadow-sm); transition: border-color 0.15s; }
+.item:hover { border-color: var(--border-hi); }
+.item-id { font-family: var(--mono); font-size: 11px; color: var(--text-faint); display: block; margin-bottom: 4px; }
+.item-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+
+/* item body */
+.item-body { color: var(--text-dim); font-size: 14px; }
+.item-body b, .item-body strong { color: var(--text); font-weight: 600; }
+.item-body p { margin-bottom: 8px; }
+.item-body p:last-child { margin-bottom: 0; }
+.item-body code { background: var(--bg-elev-2); padding: 2px 5px; border-radius: 3px; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+.item-body pre { background: var(--bg-elev-2); padding: 12px; border-radius: 6px; margin: 8px 0; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.5; border: 1px solid var(--border); }
+.item-body ul, .item-body ol { margin-left: 20px; margin-top: 6px; margin-bottom: 6px; }
+.item-body li { margin-bottom: 4px; }
+.item-body table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }
+.item-body th, .item-body td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+.item-body th { background: var(--bg-elev-2); font-weight: 600; }
+
+/* details (how-to expandable) */
+.item-body details { margin: 8px 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-elev-2); }
+.item-body details summary { padding: 9px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--info-clr); list-style: none; user-select: none; }
+.item-body details summary::-webkit-details-marker { display: none; }
+.item-body details summary::before { content: '▶ '; font-size: 10px; }
+.item-body details[open] summary::before { content: '▼ '; }
+.item-body details > *:not(summary) { padding: 10px 14px 12px; }
+
+/* glossary */
+.item-glossary { margin-top: 14px; border: 1px solid rgba(13,148,136,0.25); border-radius: 8px; padding: 10px 16px; background: rgba(13,148,136,0.04); }
+.item-glossary::before { content: '📖 용어 풀이'; display: block; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--glossary-clr); margin-bottom: 8px; letter-spacing: 0.05em; }
+.item-glossary dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+.item-glossary dt { font-weight: 700; color: var(--glossary-clr); white-space: nowrap; padding-top: 2px; }
+.item-glossary dd { color: var(--text-dim); }
+
+/* inline term + hover tooltip (hybrid glossary — term is a marked span, NOT a link) */
+.term { position: relative; border-bottom: 1px dotted var(--glossary-clr); cursor: help; }
+.term > .tip {
+  position: absolute; left: 0; top: 100%; z-index: 50;
+  width: max-content; max-width: min(340px, 80vw);
+  background: var(--text); color: #f9fafb;
+  font-family: var(--sans); font-size: 12.5px; line-height: 1.5; font-weight: 400;
+  padding: 8px 11px; border-radius: 7px; box-shadow: var(--shadow-md);
+  white-space: normal; text-align: left;
+  visibility: hidden; opacity: 0; transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease; pointer-events: none;
+}
+.term:hover > .tip, .term:focus-within > .tip { visibility: visible; opacity: 1; transform: translateY(0); pointer-events: auto; }
+.term > .tip a { color: #93c5fd; text-decoration: none; font-weight: 600; white-space: nowrap; margin-left: 6px; }
+.term > .tip a:hover { text-decoration: underline; }
+
+/* central glossary section (📖 용어사전) */
+.glossary-section .glossary-entry { background: var(--bg-elev); border: 1px solid var(--border); border-left: 4px solid var(--glossary-clr); border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; box-shadow: var(--shadow-sm); scroll-margin-top: 20px; }
+.glossary-section .glossary-entry:target { box-shadow: 0 0 0 3px rgba(13,148,136,0.18); }
+.glossary-section .g-term { font-weight: 700; color: var(--glossary-clr); font-size: 15px; margin-bottom: 6px; }
+.glossary-section .g-desc { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+.glossary-section .g-desc code { background: var(--bg-elev-2); padding: 2px 5px; border-radius: 3px; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+.glossary-section .g-back { display: inline-block; margin-top: 8px; font-family: var(--mono); font-size: 12px; color: var(--text-faint); text-decoration: none; }
+.glossary-section .g-back:hover { color: var(--text-dim); }
+
+/* depth badge */
+.depth-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-family:var(--mono); font-size:11px; font-weight:600; }
+.depth-easy   { background: rgba(5,150,105,0.10); color: #047857; }
+.depth-middle { background: rgba(79,70,229,0.10); color: #4338ca; }
+.depth-hard   { background: rgba(220,38,38,0.10); color: #b91c1c; }
+
+/* toast */
+.toast { position: fixed; top: 24px; right: 24px; background: var(--summary-clr); color: #ede9fe; padding: 12px 18px; border-radius: 8px; font-family: var(--mono); font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.2s, transform 0.2s; transform: translateY(-10px); z-index: 200; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 980px) {
+  body { grid-template-columns: 1fr; }
+  aside { position: static; max-height: none; }
+  main { padding: 24px 20px 60px; }
+}
+
+/* Mermaid 다이어그램 컨테이너 */
+.mermaid { display:flex; justify-content:center; margin:14px 0; }
+.mermaid svg { max-width:100%; height:auto; }
+.mermaid:not([data-processed]) { white-space:pre; font-family:'JetBrains Mono',monospace;
+  font-size:12px; color:#6b7280; background:#f3f4f6; padding:10px; border-radius:6px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js" integrity="sha384-yQ4mmBBT+vhTAwjFH0toJXNYJ6O4usWnt6EPIdWwrRvx2V/n5lXuDZQwQFeSFydF" crossorigin="anonymous"></script> <!-- pragma: allowlist secret (SRI integrity 해시는 비밀이 아님) -->
+</head>
+<body>
+<aside>
+  <h2>Sections</h2>
+  <ol id="toc"></ol>
+  <div class="toggle-all">
+    <button id="btn-toggle-all">▼ 전체 접기</button>
+  </div>
+</aside>
+<main>
+  <header class="hero" id="top">
+    <h1>beads(bd) 도입 평가 — 내 환경에 도움이 되는가</h1>
+    <div class="meta">
+      <b id="total-count">0</b>개 항목 ·
+      <span class="depth-badge depth-middle">Depth: middle</span> ·
+      <span id="gen-date"></span>
+    </div>
+  </header>
+  <div id="sections"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = 'claude-explain-2026-11-02-beads-adoption-evaluation';
+/*
+ * SECURITY NOTE: EXPLAIN_DATA is authored entirely by the agent (trusted content).
+ * Item body HTML is generated markup — no user input is passed through createContextualFragment.
+ */
+const EXPLAIN_DATA = [
+  {
+    id: 's1',
+    title: '1. 결론',
+    summary: '전역 도입은 비권장, 조건부 2주 trial만 권장. 단일 에이전트 용도는 기존 스택과 중복되고, 멀티 에이전트 fan-out에서만 신규 가치가 있다.',
+    items: [
+      {
+        id: 's1-1',
+        title: '판정: 조건부 2주 trial',
+        body: `
+          <style>
+            .verdict-s1-1 { display:flex; gap:14px; flex-wrap:wrap; margin:10px 0 }
+            .vcard-s1-1 { flex:1 1 200px; border-radius:10px; padding:12px 14px; border:1px solid var(--border); background:#fff }
+            .vcard-s1-1 .k { font-size:11px; font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px }
+            .vcard-s1-1 .v { font-size:15px; font-weight:700; color:var(--text) }
+            .vcard-s1-1.no { border-left:4px solid #dc2626; background:#fef2f2 } .vcard-s1-1.no .k { color:#b91c1c }
+            .vcard-s1-1.yes { border-left:4px solid #059669; background:#ecfdf5 } .vcard-s1-1.yes .k { color:#047857 }
+            .vcard-s1-1.mid { border-left:4px solid #4f46e5; background:#eef2ff } .vcard-s1-1.mid .k { color:#4338ca }
+            .pulse-s1-1 { vertical-align:middle; margin-right:4px }
+          </style>
+          <p><b>무엇:</b> beads(<code>bd</code>)를 지금 전역으로 도입하지 않고, trial repo 1개에 한정해 2주간 시험하는 것을 권장한다.</p>
+          <div class="verdict-s1-1">
+            <div class="vcard-s1-1 no"><div class="k">전역 도입</div><div class="v">비권장</div></div>
+            <div class="vcard-s1-1 mid"><div class="k">
+              <svg class="pulse-s1-1" width="10" height="10"><circle cx="5" cy="5" r="4" fill="#4f46e5"><animate attributeName="opacity" values="1;0.3;1" dur="1.6s" repeatCount="indefinite"/></circle></svg>권장</div><div class="v">조건부 2주 trial</div></div>
+            <div class="vcard-s1-1 yes"><div class="k">도입 지점</div><div class="v">멀티 에이전트 fan-out</div></div>
+          </div>
+          <p><b>왜 (3줄 근거):</b></p>
+          <ol>
+            <li><b>중복</b> — 단일 에이전트 planning은 <code>.claude/plans/*/INDEX.md</code> + <code>cc-status.py</code> + superpowers plans + memory와 거의 전부 겹친다.</li>
+            <li><b>신규 가치는 한 곳</b> — 원자적 claim, 충돌 없는 hash ID, discovered-from 추적은 멀티 에이전트(cc-orchestra, subagent-driven-development, vis-orchestra)에서만 현재 스택에 없는 기능이다.</li>
+            <li><b>설치 마찰 3종</b> — <code>--global</code>은 stow symlink와 충돌, telemetry 기본 on, <code>bd prime</code>의 "markdown TODO 금지" 지시가 superpowers·ADHD 규칙과 충돌. 모두 수동 우회가 필요하다.</li>
+          </ol>
+          <details><summary>어떻게 (자세히)</summary>
+            <p>3~4절에서 겹침과 신규 가치를 비교하고, 5절에서 위험 6가지를 severity로 정리한다. 6절의 trial 설계를 따르면 설치·설정 30분, 세션당 추가 비용은 거의 없다.</p>
+          </details>
+        `
+      }
+    ]
+  },
+  {
+    id: 's2',
+    title: '2. beads가 무엇인가',
+    summary: 'AI 에이전트용 분산 graph issue tracker. markdown plan 파일을 Dolt 기반 의존성 그래프 DB로 대체한다. Claude Code에는 MCP가 아니라 CLI + SessionStart hook으로 붙인다.',
+    items: [
+      {
+        id: 's2-1',
+        title: '프로젝트 개요와 저장 구조',
+        body: `
+          <p><b>무엇:</b> Steve Yegge 주도 Go 프로젝트(MIT). 작업을 <span class="term" tabindex="0">Dolt<span class="tip">Dolt: git처럼 버전 관리되는 SQL DB. <a href="#g-dolt">상세↗</a></span></span>에 의존성 그래프로 저장한다.</p>
+          <svg viewBox="0 0 480 90" width="100%" style="max-width:560px">
+            <rect x="0" y="10" width="110" height="34" rx="6" fill="#eef2ff" stroke="#c7d2fe"/><text x="55" y="31" font-size="12" text-anchor="middle" fill="#4338ca">bd CLI</text>
+            <line x1="110" y1="27" x2="150" y2="27" stroke="#9ca3af"/><polygon points="150,23 158,27 150,31" fill="#9ca3af"/>
+            <rect x="160" y="10" width="150" height="34" rx="6" fill="#d1fae5" stroke="#6ee7b7"/><text x="235" y="31" font-size="11" text-anchor="middle" fill="#047857">.beads/embeddeddolt/</text>
+            <line x1="310" y1="27" x2="340" y2="27" stroke="#9ca3af"/><polygon points="340,23 348,27 340,31" fill="#9ca3af"/>
+            <rect x="350" y="10" width="130" height="34" rx="6" fill="#e0f2fe" stroke="#7dd3fc"/><text x="415" y="31" font-size="11" text-anchor="middle" fill="#0369a1">refs/dolt/data</text>
+            <text x="235" y="64" font-size="10" fill="#6b7280" text-anchor="middle">embedded 저장 (기본)</text>
+            <text x="415" y="64" font-size="10" fill="#6b7280" text-anchor="middle">bd dolt push/pull</text>
+            <text x="55" y="64" font-size="10" fill="#6b7280" text-anchor="middle">hash ID: bd-a1b2</text>
+          </svg>
+          <p><b>왜:</b> markdown plan은 에이전트 둘이 동시에 편집하면 conflict가 나고 의존 관계를 계산할 수 없다. 그래프 DB는 "지금 가능한 작업"을 질의로 얻는다.</p>
+          <details><summary>어떻게 (자세히)</summary>
+            <ul>
+              <li>2025-10 생성, 2026-11-02 기준 star 28.4k, fork 1.9k, open issue 1,595, 최신 release v1.3.2(2026-10-24).</li>
+              <li>동기화는 git remote의 <code>refs/dolt/data</code>를 통해 <code>bd dolt push/pull</code>로 수행.</li>
+            </ul>
+          </details>
+        `
+      },
+      {
+        id: 's2-2',
+        title: '핵심 명령 8종',
+        body: `
+          <p><b>무엇:</b> 일상 작업은 <code>bd ready</code>, <code>bd create</code>, <code>bd update --claim</code> 세 개로 충분하고, 나머지는 멀티 에이전트·워크플로우용이다.</p>
+          <table>
+            <tr><th>명령</th><th>역할</th></tr>
+            <tr><td><code>bd ready</code></td><td>blocker 없는 작업 목록 (transitive blocking 계산)</td></tr>
+            <tr><td><code>bd create "T" -p 0 --deps discovered-from:bd-42</code></td><td>작업 생성 + 발견 출처 연결</td></tr>
+            <tr><td><code>bd update &lt;id&gt; --claim</code></td><td>원자적 claim (assignee + in_progress)</td></tr>
+            <tr><td><code>bd dep add &lt;child&gt; &lt;parent&gt;</code></td><td>blocks / parent-child / related / discovered-from</td></tr>
+            <tr><td><code>bd prime</code></td><td>SessionStart hook에서 workflow context + 메모리 주입 (1~2k tokens)</td></tr>
+            <tr><td><code>bd remember "insight"</code></td><td>프로젝트 사실 저장, <code>bd prime</code>이 재주입</td></tr>
+            <tr><td><code>bd merge-slot acquire/release</code></td><td>충돌 작업 직렬화 primitive</td></tr>
+            <tr><td><code>bd swarm</code>, <code>bd mol pour</code>, gates</td><td>epic fan-out, 워크플로우 템플릿(formula), 승인/타이머/CI 대기</td></tr>
+          </table>
+          <p><b>왜:</b> 명령 표면이 넓으므로 trial에서는 앞 4개만 쓰고 swarm·mol은 제외하는 편이 범위 통제에 유리하다.</p>
+        `
+      },
+      {
+        id: 's2-3',
+        title: 'Claude Code 통합: hook이 MCP보다 가볍다',
+        body: `
+          <p><b>무엇:</b> 통합 방식은 MCP가 아니라 CLI + <span class="term" tabindex="0">SessionStart hook<span class="tip">SessionStart hook: 세션 시작·resume·compaction 후에 자동 실행되는 명령. <a href="#g-sessionstart">상세↗</a></span></span>이다. <code>bd prime --hook-json</code>이 세션 시작·resume·compaction 후마다 실행된다.</p>
+          <style>
+            @keyframes grow-mcp-s2-3 { from { width:0 } to { width:100% } }
+            @keyframes grow-hook-s2-3 { from { width:0 } to { width:8% } }
+            .b1-s2-3 { height:14px; border-radius:5px; background:linear-gradient(90deg,#dc2626,#f87171); animation:grow-mcp-s2-3 1.2s ease-out forwards }
+            .b2-s2-3 { height:14px; border-radius:5px; background:linear-gradient(90deg,#059669,#34d399); animation:grow-hook-s2-3 1.2s ease-out forwards }
+            .lbl-s2-3 { font-size:12px; color:#4b5563; margin:8px 0 3px }
+            @media (prefers-reduced-motion: reduce) { .b1-s2-3 { animation:none; width:100% } .b2-s2-3 { animation:none; width:8% } }
+          </style>
+          <div class="lbl-s2-3">MCP 방식: 10~50k tokens (상한 기준)</div><div class="b1-s2-3"></div>
+          <div class="lbl-s2-3">hook 방식 (<code>bd prime</code>): 1~2k tokens</div><div class="b2-s2-3"></div>
+          <p><b>왜:</b> 공식 문서가 hook을 권장한다. 이미 superpowers + ADHD ruleset으로 SessionStart가 무거운 환경에서는 이 차이가 중요하다.</p>
+        `
+      }
+    ]
+  },
+  {
+    id: 's3',
+    title: '3. 현재 스택과의 겹침 (단일 에이전트)',
+    summary: '단일 에이전트 용도의 6개 기능 중 5개가 기존 스택과 중복이고 1개는 범위 밖(Things)이다.',
+    items: [
+      {
+        id: 's3-1',
+        title: '기능별 겹침 비교',
+        body: `
+          <style>
+            .tag-s3-1 { display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; font-weight:700 }
+            .dup-s3-1 { background:#fee2e2; color:#b91c1c }
+            .out-s3-1 { background:#f3f4f6; color:#6b7280 }
+          </style>
+          <p><b>무엇:</b> beads의 단일 에이전트 기능을 현재 보유 스택과 1:1로 대조했다.</p>
+          <table>
+            <tr><th>기능</th><th>beads</th><th>현재 보유</th><th>판정</th></tr>
+            <tr><td>세션 시작 시 "다음 할 일" 주입</td><td><code>bd prime</code> → <code>bd ready</code></td><td><code>&lt;when-starting-a-new-session&gt;</code> hook이 INDEX.md Status: active 읽음</td><td><span class="tag-s3-1 dup-s3-1">중복</span></td></tr>
+            <tr><td>plan 상태 관리</td><td><code>bd update --status</code></td><td><code>cc-status.py</code> + dashboard</td><td><span class="tag-s3-1 dup-s3-1">중복</span></td></tr>
+            <tr><td>작업 분해·순서</td><td>epic → <code>bd-a3f8.1</code> 계층 + blocks</td><td>superpowers writing-plans 체크박스 Task</td><td><span class="tag-s3-1 dup-s3-1">중복 (표현만 다름)</span></td></tr>
+            <tr><td>프로젝트 사실 기억</td><td><code>bd remember</code></td><td><code>~/.claude/projects/&lt;cwd&gt;/memory/</code> + MEMORY.md</td><td><span class="tag-s3-1 dup-s3-1">중복</span> README도 "operator 선호는 harness 메모리에" 명시</td></tr>
+            <tr><td>compaction 후 context 복원</td><td>SessionStart 재실행</td><td>동일 hook 구조 이미 운용</td><td><span class="tag-s3-1 dup-s3-1">중복</span></td></tr>
+            <tr><td>개인 todo</td><td>—</td><td>Things MCP</td><td><span class="tag-s3-1 out-s3-1">범위 밖</span></td></tr>
+          </table>
+          <p><b>왜:</b> 중복이 크면 beads는 "교체"가 아니라 "추가 시스템"이 되어 운영 비용만 늘어난다.</p>
+        `
+      },
+      {
+        id: 's3-2',
+        title: '관찰: plan 추적이 사실상 휴면 상태',
+        body: `
+          <p><b>무엇:</b> <code>grep "Status: active"</code> 결과가 0건이고 <code>.claude/plans/</code> 최신 폴더가 2026-02다. 해석은 두 가지다.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0">
+            <div style="flex:1 1 240px;border:1px solid #e5e7eb;border-top:4px solid #0284c7;border-radius:8px;padding:10px 14px;background:#fff">
+              <b style="color:#0369a1">(a) 대체됨</b><p style="margin-top:4px">추적이 superpowers plans + Things로 이동했다. beads가 대체할 대상이 거의 없다.</p>
+            </div>
+            <div style="flex:1 1 240px;border:1px solid #e5e7eb;border-top:4px solid #d97706;border-radius:8px;padding:10px 14px;background:#fff">
+              <b style="color:#b45309">(b) 부담스러워 미사용</b><p style="margin-top:4px">기존 추적이 무거워 쓰지 않는 것이다. <code>bd ready</code> 한 줄이 더 가볍다.</p>
+            </div>
+          </div>
+          <p><b>왜:</b> (a)면 도입 이득이 작고 (b)면 이득이 크다. 어느 쪽인지는 사용자만 판단할 수 있고, 이 판단이 trial 판정 기준 (1)과 직결된다.</p>
+        `
+      }
+    ]
+  },
+  {
+    id: 's4',
+    title: '4. 신규 가치 (멀티 에이전트)',
+    summary: '현재 스택에 없는 것은 원자적 claim, hash ID, discovered-from, merge slot, gates 5가지. 모두 여러 에이전트가 같은 queue를 공유할 때 의미가 있다.',
+    items: [
+      {
+        id: 's4-1',
+        title: '신규 가치 5종: 현재 vs beads',
+        body: `
+          <p><b>무엇:</b> 현재 스택에 없는 5가지 기능을 현재 방식과 나란히 비교했다.</p>
+          <style>
+            .grid-s4-1 { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:10px; margin:10px 0 }
+            .c-s4-1 { border:1px solid var(--border); border-radius:10px; background:#fff; padding:10px 12px; font-size:12.5px }
+            .c-s4-1 h4 { font-size:13.5px; color:var(--text); margin-bottom:6px }
+            .c-s4-1 .now { background:#fef2f2; color:#991b1b; border-radius:5px; padding:4px 8px; margin-bottom:4px }
+            .c-s4-1 .bd { background:#ecfdf5; color:#065f46; border-radius:5px; padding:4px 8px }
+            .c-s4-1 .now::before { content:'현재: '; font-weight:700 }
+            .c-s4-1 .bd::before { content:'beads: '; font-weight:700 }
+          </style>
+          <div class="grid-s4-1">
+            <div class="c-s4-1"><h4>1. 원자적 claim</h4><div class="now">orchestrator가 수동 assign</div><div class="bd"><code>bd ready --claim --json</code>, first-win 보장</div></div>
+            <div class="c-s4-1"><h4>2. 충돌 없는 ID</h4><div class="now">markdown plan을 두 에이전트가 동시 편집 시 conflict</div><div class="bd">hash ID(<code>bd-a1b2</code>)라 worktree·브랜치 merge 시 ID 충돌 없음</div></div>
+            <div class="c-s4-1"><h4>3. discovered-from</h4><div class="now">부수 issue를 journal·memory에 산문으로 기록</div><div class="bd">출처와 함께 구조적으로 기록</div></div>
+            <div class="c-s4-1"><h4>4. merge slot</h4><div class="now">직렬화 수단 없음</div><div class="bd">충돌 작업 직렬화. cc-orchestra에서 여러 pane이 같은 repo를 건드릴 때 유효</div></div>
+            <div class="c-s4-1"><h4>5. gates</h4><div class="now">승인 대기는 수동</div><div class="bd">human/timer/GitHub CI 승인 대기를 워크플로우에 포함. <code>/loop</code>·cron과 결합 가능</div></div>
+          </div>
+          <p><b>왜:</b> 적용 지점은 harness-roadmap의 "cc-orchestra 첫 검증 완료, 다음 cluster brainstorming 예정"이다. 두 번째 cluster가 2개 이상 에이전트 병렬이면 beads가 shared task queue 역할을 할 수 있다.</p>
+        `,
+        glossary: [
+          { term: 'claim', desc: '작업을 자기 것으로 선점하는 연산. 원자적이면 동시에 요청해도 정확히 한 에이전트만 성공한다.' }
+        ]
+      },
+      {
+        id: 's4-2',
+        title: 'beads 워크플로우: create → depgraph → ready → claim → close',
+        body: `
+          <p><b>무엇:</b> 작업이 생성되어 종료되기까지의 흐름이다. 작업 중 발견한 부수 이슈는 <code>discovered-from</code>으로 되돌아가 queue에 들어간다.</p>
+          <div class="mermaid">
+flowchart LR
+  A["bd create"] --> B["bd dep add (의존성 그래프)"]
+  B --> C["bd ready (blocker 없는 작업)"]
+  C --> D["bd update --claim"]
+  D --> E["작업 수행"]
+  E --> F["bd close"]
+  E -. "부수 이슈 발견" .-> G["bd create --deps discovered-from"]
+  G --> B
+  F -. "blocker 해소" .-> C
+</div>
+          <p><b>왜:</b> <code>bd ready</code>가 transitive blocking을 계산하므로 에이전트는 순서를 직접 판단하지 않아도 된다. 선행 작업을 닫으면 후속 작업이 자동으로 ready에 나타난다.</p>
+        `
+      },
+      {
+        id: 's4-3',
+        title: '멀티 에이전트 claim 흐름',
+        body: `
+          <p><b>무엇:</b> 두 subagent가 같은 queue에서 동시에 같은 작업을 요청하면 먼저 도착한 쪽만 claim에 성공한다.</p>
+          <div class="mermaid">
+sequenceDiagram
+  participant O as Orchestrator
+  participant A as Agent A
+  participant B as Agent B
+  participant D as bd (Dolt)
+  O->>D: bd create bd-a1b2, bd-c3d4
+  A->>D: bd ready --claim
+  B->>D: bd ready --claim
+  D-->>A: bd-a1b2 claimed
+  D-->>B: bd-c3d4 claimed
+  A->>D: bd create discovered-from bd-a1b2
+  A->>D: bd close bd-a1b2
+  B->>D: bd close bd-c3d4
+  D-->>O: bd ready (후속 작업 해소)
+</div>
+          <p><b>왜:</b> 이 시퀀스에서 orchestrator는 assign을 하지 않는다. 단, embedded 모드는 single writer라서 여러 프로세스가 동시에 쓰려면 <code>bd init --server</code>가 필요하다 (5절 주의 6번).</p>
+        `
+      }
+    ]
+  },
+  {
+    id: 's5',
+    title: '5. 도입 시 주의 사항 6가지',
+    summary: '문서에서 확인된 사실 기준. severity는 이 환경(stow symlink, superpowers, cc-orchestra)에서의 영향도에 대한 평가자 판단이다.',
+    items: [
+      {
+        id: 's5-1',
+        title: '주의 사항 6가지와 severity',
+        body: `
+          <style>
+            .sev-s5-1 { display:inline-block; min-width:44px; text-align:center; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; color:#fff }
+            .hi-s5-1 { background:#dc2626 } .md-s5-1 { background:#d97706 } .lo-s5-1 { background:#0284c7 }
+            @keyframes bar-s5-1 { from { width:0 } }
+            .meter-s5-1 { height:6px; border-radius:3px; background:#e5e7eb; width:80px; overflow:hidden }
+            .meter-s5-1 > i { display:block; height:100%; animation:bar-s5-1 .9s ease-out }
+            @media (prefers-reduced-motion: reduce) { .meter-s5-1 > i { animation:none } }
+          </style>
+          <p><b>무엇:</b> 도입 전 알아야 할 6가지 위험을 영향도 순으로 표시했다.</p>
+          <table>
+            <tr><th>#</th><th>항목</th><th>severity</th><th>대응</th></tr>
+            <tr><td>2</td><td><b>--global 설치와 stow 충돌</b>: CLAUDE.md 섹션은 "skipped if that file is a symlink". <code>~/.claude/CLAUDE.md</code>·<code>settings.json</code>은 claude-config stow symlink이고, <code>~/.claude</code> 직접 수정은 규약 위반</td>
+              <td><span class="sev-s5-1 hi-s5-1">높음</span><div class="meter-s5-1"><i style="width:90%;background:#dc2626"></i></div></td>
+              <td><code>--global</code> 금지. claude-config의 settings.json에 hook 한 줄 수동 추가 또는 trial repo에만 project-level <code>bd setup claude</code></td></tr>
+            <tr><td>3</td><td><b>context 지시 충돌</b>: <code>bd prime</code> 주입 섹션의 "Do not use markdown TODO lists" 가 writing-plans 체크박스 Task, ADHD 모드 번호 목록과 정면 충돌. 매 세션 1~2k tokens 추가</td>
+              <td><span class="sev-s5-1 hi-s5-1">높음</span><div class="meter-s5-1"><i style="width:85%;background:#dc2626"></i></div></td>
+              <td>trial에서 방해 횟수를 기록 (판정 기준 3)</td></tr>
+            <tr><td>1</td><td><b>Telemetry 기본 on</b>: 명령명·bd 버전·OS를 <code>gastownhall-eventsapi.com</code>으로 전송 (issue 내용·경로는 미수집)</td>
+              <td><span class="sev-s5-1 md-s5-1">중간</span><div class="meter-s5-1"><i style="width:55%;background:#d97706"></i></div></td>
+              <td><code>bd metrics off</code> 또는 <code>BD_DISABLE_METRICS=1</code>, <code>DO_NOT_TRACK=1</code></td></tr>
+            <tr><td>4</td><td><b>repo footprint·운영 비용</b>: <code>.beads/embeddeddolt/</code>가 프로젝트마다 생성. 업그레이드 절차가 복잡하고 1.x에 open issue 1,595개로 변동이 크다</td>
+              <td><span class="sev-s5-1 md-s5-1">중간</span><div class="meter-s5-1"><i style="width:55%;background:#d97706"></i></div></td>
+              <td><code>--stealth</code>로 커밋 대상에서 제외</td></tr>
+            <tr><td>6</td><td><b>단일 writer</b>: embedded 모드는 single writer. cc-orchestra pane들이 동시에 쓰려면 <code>bd init --server</code>(외부 dolt sql-server) 필요</td>
+              <td><span class="sev-s5-1 md-s5-1">중간</span><div class="meter-s5-1"><i style="width:50%;background:#d97706"></i></div></td>
+              <td>멀티 에이전트 trial 단계에서만 server 모드 검토 (데몬 하나 추가)</td></tr>
+            <tr><td>5</td><td><b><code>bd remember</code> 범위</b>: README가 "per-operator 선호는 harness 메모리에"라고 명시</td>
+              <td><span class="sev-s5-1 lo-s5-1">낮음</span><div class="meter-s5-1"><i style="width:20%;background:#0284c7"></i></div></td>
+              <td>프로젝트 사실에만 사용, 교훈·피드백은 기존 memory 시스템 유지</td></tr>
+          </table>
+          <p><b>왜:</b> 높음 2건은 설치 방식과 규칙 충돌이라 trial 전에 해소해야 하고, 중간 이하는 운영 중 완화할 수 있다.</p>
+          <details><summary>어떻게 (자세히: 업그레이드 절차)</summary>
+            <p><code>bd export --all</code> 백업 → binary 교체 → <code>bd hooks install</code> → schema migration 시 clone 중 하나만 <code>bd migrate schema</code> + <code>bd dolt push</code>, 나머지는 <code>bd bootstrap</code>.</p>
+          </details>
+        `
+      }
+    ]
+  },
+  {
+    id: 's6',
+    title: '6. 권장 trial 설계 (제안, 미실행)',
+    summary: '코드 프로젝트 1개에서 2주간, stealth 모드와 telemetry off로 시험하고, 3개 판정 기준으로 유지·제거를 결정한다.',
+    items: [
+      {
+        id: 's6-1',
+        title: '설치부터 판정까지 5단계',
+        body: `
+          <style>
+            .stp-s6-1 { list-style:none; margin:10px 0 !important; padding:0; counter-reset:st }
+            .stp-s6-1 > li { counter-increment:st; position:relative; padding:4px 0 14px 46px; margin:0 }
+            .stp-s6-1 > li::before { content:counter(st); position:absolute; left:0; top:0; width:30px; height:30px; border-radius:50%; background:#4f46e5; color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:14px }
+            .stp-s6-1 > li::after { content:''; position:absolute; left:14px; top:32px; bottom:2px; width:2px; background:#c7d2fe }
+            .stp-s6-1 > li:last-child::after { display:none }
+            .stp-s6-1 > li:last-child::before { background:#059669 }
+            .stp-s6-1 .h { font-weight:700; color:var(--text) }
+          </style>
+          <p><b>무엇:</b> 설치·설정 30분, 이후 2주 관찰.</p>
+          <ol class="stp-s6-1">
+            <li><div class="h">대상 선정</div>claude-config·dotfiles가 아닌 코드 프로젝트 1개 (예: kt4u 계열 또는 msbaek-claude-plugins).</li>
+            <li><div class="h">설치</div><code>brew install beads</code> → 해당 repo에서 <code>bd init --stealth</code> (git에 남기지 않음).</li>
+            <li><div class="h">telemetry 해제</div><code>bd metrics off</code>.</li>
+            <li><div class="h">hook 수동 추가</div><code>.claude/settings.local.json</code>에 SessionStart <code>bd prime --hook-json</code> 추가 (<code>--global</code> 사용 안 함).</li>
+            <li><div class="h">2주 운영 후 판정</div>아래 판정 기준으로 유지·제거 결정.</li>
+          </ol>
+          <p><b>왜:</b> stealth + project-level 설정이면 되돌리기가 쉽고 stow 규약과 충돌하지 않는다.</p>
+        `
+      },
+      {
+        id: 's6-2',
+        title: '판정 기준 (acceptance)',
+        body: `
+          <p><b>무엇:</b> 아래 3개 기준으로 유지·제거를 결정한다.</p>
+          <div class="mermaid">
+flowchart TD
+  S["2주 trial 종료"] --> Q1{"(1) 세션 시작 시 bd ready를 plan INDEX보다 먼저 참조했는가"}
+  Q1 -- 아니오 --> Q2{"(2) subagent 2개 이상 병렬에서 claim, discovered-from이 실제 사용됐는가"}
+  Q1 -- 예 --> K["유지 검토"]
+  Q2 -- 예 --> K
+  Q2 -- 아니오 --> R["제거: bd setup claude --remove, .beads 삭제"]
+  K --> Q3{"(3) bd prime 지시가 superpowers 흐름을 방해한 횟수가 허용 범위인가"}
+  Q3 -- 예 --> Y["유지"]
+  Q3 -- 아니오 --> R
+</div>
+          <p><b>왜:</b> (1)·(2)가 모두 "아니오"면 beads의 가치가 입증되지 않은 것이므로 제거한다. (3)은 유지 시 마찰 비용 확인용이다.</p>
+          <details><summary>어떻게 (자세히: 측정 방법)</summary>
+            <ul>
+              <li>(1): 세션 시작 직후 첫 도구 호출을 trial 기간 동안 메모한다.</li>
+              <li>(2): <code>bd list</code>에서 assignee가 서로 다른 claim과 discovered-from 링크 개수를 센다.</li>
+              <li>(3): superpowers 체크박스 plan을 쓰려 할 때 <code>bd prime</code> 지시와 충돌한 횟수를 기록한다.</li>
+            </ul>
+          </details>
+        `
+      }
+    ]
+  }
+];
+/* Central glossary entries: [{ slug, term, desc }] where desc is agent-authored HTML (trusted).
+ * MUST always be a real array — the builder emits at least [] so this placeholder never stays raw. */
+const GLOSSARY = [
+  { slug: 'dolt', term: 'Dolt', desc: 'git처럼 commit·branch·merge가 되는 SQL 데이터베이스. beads는 이를 저장소로 사용해 작업 이력을 버전 관리하고, git remote의 <code>refs/dolt/data</code>로 동기화한다.' },
+  { slug: 'sessionstart', term: 'SessionStart hook', desc: 'Claude Code가 세션 시작·resume·compaction 직후 자동 실행하는 hook. <code>bd prime --hook-json</code>을 여기에 연결하면 매 세션 초기에 작업 context가 주입된다. 주입량은 1~2k tokens.' }
+];
+
+function saveToggleState(allOpen) {
+  try { localStorage.setItem(STORAGE_KEY + '-expand', allOpen ? '1' : '0'); } catch {}
+}
+
+function loadToggleState() {
+  try { return localStorage.getItem(STORAGE_KEY + '-expand') !== '0'; } catch { return true; }
+}
+
+function renderGlossary(glossary) {
+  if (!glossary || !glossary.length) return null;
+  const div = document.createElement('div');
+  div.className = 'item-glossary';
+  const dl = document.createElement('dl');
+  glossary.forEach(({ term, desc }) => {
+    const dt = document.createElement('dt');
+    dt.textContent = term;
+    const dd = document.createElement('dd');
+    dd.textContent = desc;
+    dl.append(dt, dd);
+  });
+  div.appendChild(dl);
+  return div;
+}
+
+function renderItem(item) {
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.dataset.id = item.id;
+
+  const idSpan = document.createElement('span');
+  idSpan.className = 'item-id';
+  idSpan.textContent = item.id;
+
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'item-title';
+  titleDiv.textContent = item.title;
+
+  /* body: agent-authored HTML via createContextualFragment. <style>/<svg> apply; <script> is forbidden by agent policy (not by this mechanism). Only trusted EXPLAIN_DATA flows here — no user input. */
+  const body = document.createElement('div');
+  body.className = 'item-body';
+  const range = document.createRange();
+  range.selectNodeContents(body);
+  body.appendChild(range.createContextualFragment(item.body));
+
+  div.append(idSpan, titleDiv, body);
+
+  const glossaryEl = renderGlossary(item.glossary);
+  if (glossaryEl) div.appendChild(glossaryEl);
+
+  return div;
+}
+
+function renderSections() {
+  const container = document.getElementById('sections');
+  let total = 0;
+  EXPLAIN_DATA.forEach(sec => {
+    const secEl = document.createElement('section');
+    secEl.className = 's';
+    secEl.id = sec.id;
+
+    const h2 = document.createElement('h2');
+    h2.textContent = sec.title;
+    secEl.appendChild(h2);
+
+    if (sec.summary) {
+      const sumEl = document.createElement('div');
+      sumEl.className = 'sec-summary';
+      sumEl.textContent = sec.summary;
+      secEl.appendChild(sumEl);
+    }
+
+    sec.items.forEach(item => { total++; secEl.appendChild(renderItem(item)); });
+    container.appendChild(secEl);
+  });
+  document.getElementById('total-count').textContent = total;
+}
+
+function renderTOC() {
+  const toc = document.getElementById('toc');
+  EXPLAIN_DATA.forEach(sec => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + sec.id;
+    a.textContent = sec.title;
+    li.appendChild(a);
+    toc.appendChild(li);
+  });
+  if (GLOSSARY && GLOSSARY.length) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#glossary';
+    a.textContent = '📖 용어사전';
+    li.appendChild(a);
+    toc.appendChild(li);
+  }
+}
+
+function renderGlossarySection() {
+  if (!GLOSSARY || !GLOSSARY.length) return;
+  const container = document.getElementById('sections');
+  const sec = document.createElement('section');
+  sec.className = 's glossary-section';
+  sec.id = 'glossary';
+
+  const h2 = document.createElement('h2');
+  h2.textContent = '📖 용어사전';
+  sec.appendChild(h2);
+
+  GLOSSARY.forEach(g => {
+    const entry = document.createElement('div');
+    entry.className = 'glossary-entry';
+    entry.id = 'g-' + g.slug;
+
+    const term = document.createElement('div');
+    term.className = 'g-term';
+    term.textContent = g.term;
+
+    /* desc: agent-authored HTML (trusted EXPLAIN_DATA sibling) — render as fragment for code/emphasis. */
+    const desc = document.createElement('div');
+    desc.className = 'g-desc';
+    const range = document.createRange();
+    range.selectNodeContents(desc);
+    desc.appendChild(range.createContextualFragment(g.desc));
+
+    const back = document.createElement('a');
+    back.className = 'g-back';
+    back.href = '#top';
+    back.textContent = '맨 위로 ↑';
+
+    entry.append(term, desc, back);
+    sec.appendChild(entry);
+  });
+
+  container.appendChild(sec);
+}
+
+function attachEvents() {
+  /* TOC highlight via IntersectionObserver */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting)
+        document.querySelectorAll('#toc a').forEach(a => a.classList.toggle('current', a.getAttribute('href') === '#' + e.target.id));
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('section.s').forEach(s => observer.observe(s));
+
+  /* expand / collapse all <details> */
+  const btn = document.getElementById('btn-toggle-all');
+  let allOpen = loadToggleState();
+
+  function applyToggle() {
+    document.querySelectorAll('.item-body details').forEach(d => { d.open = allOpen; });
+    btn.textContent = allOpen ? '▼ 전체 접기' : '▶ 전체 펼치기';
+    saveToggleState(allOpen);
+  }
+
+  btn.addEventListener('click', () => { allOpen = !allOpen; applyToggle(); });
+
+  /* apply saved state after render */
+  applyToggle();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('gen-date').textContent = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric' }) + ' 생성';
+
+renderTOC();
+renderSections();
+renderGlossarySection();
+
+/* Mermaid: head CDN loaded it; render the .mermaid blocks injected by renderSections(). */
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'strict' });
+  try { mermaid.run({ querySelector: '.mermaid' }); }
+  catch (e) { console.error('mermaid.run failed', e); }
+}
+attachEvents();
+</script>
+</body>
+</html>
