@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>herdr 사용법 — msbaek 설정 기준 핫키·워크플로우·CLI — Explain</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #f7f8fa; --bg-elev: #ffffff; --bg-elev-2: #f3f4f6;
+  --border: #e5e7eb; --border-hi: #d1d5db;
+  --text: #111827; --text-dim: #4b5563; --text-faint: #9ca3af;
+  --summary-clr: #4f46e5; --glossary-clr: #0d9488; --info-clr: #0284c7;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.65; display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+
+/* sidebar */
+aside { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; background: var(--bg-elev); border-right: 1px solid var(--border); padding: 24px 18px; }
+aside h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 14px; font-weight: 600; }
+aside h2:not(:first-child) { margin-top: 24px; }
+aside ol { list-style: none; }
+aside li { margin-bottom: 4px; }
+aside a { color: var(--text-dim); text-decoration: none; font-size: 13px; display: flex; justify-content: space-between; padding: 7px 10px; border-radius: 6px; transition: background 0.15s, color 0.15s; }
+aside a:hover { background: var(--bg-elev-2); color: var(--text); }
+aside a.current { background: var(--bg-elev-2); color: var(--text); border-left: 2px solid var(--summary-clr); padding-left: 8px; }
+.toggle-all { margin-top: 16px; }
+.toggle-all button { width: 100%; background: var(--bg-elev-2); color: var(--text-dim); border: 1px solid var(--border); padding: 7px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: var(--mono); transition: all 0.15s; text-align: left; }
+.toggle-all button:hover { color: var(--text); border-color: var(--border-hi); }
+
+/* main */
+main { padding: 36px 56px 80px; max-width: 1100px; }
+header.hero { margin-bottom: 36px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+header.hero h1 { font-size: 26px; margin-bottom: 10px; letter-spacing: -0.01em; }
+header.hero .meta { font-size: 13px; color: var(--text-dim); font-family: var(--mono); }
+header.hero .meta b { color: var(--text); }
+
+/* sections */
+section.s { margin-bottom: 56px; }
+section.s > h2 { font-size: 21px; margin-bottom: 10px; }
+
+/* summary callout */
+.sec-summary { background: rgba(79,70,229,0.06); border: 1px solid rgba(79,70,229,0.2); border-left: 4px solid var(--summary-clr); border-radius: 8px; padding: 12px 18px; margin-bottom: 22px; font-size: 14px; color: var(--text); line-height: 1.6; }
+.sec-summary::before { content: '📌 핵심'; display: block; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--summary-clr); margin-bottom: 6px; letter-spacing: 0.05em; }
+
+/* items */
+.item { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin-bottom: 14px; box-shadow: var(--shadow-sm); transition: border-color 0.15s; }
+.item:hover { border-color: var(--border-hi); }
+.item-id { font-family: var(--mono); font-size: 11px; color: var(--text-faint); display: block; margin-bottom: 4px; }
+.item-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+
+/* item body */
+.item-body { color: var(--text-dim); font-size: 14px; }
+.item-body b, .item-body strong { color: var(--text); font-weight: 600; }
+.item-body p { margin-bottom: 8px; }
+.item-body p:last-child { margin-bottom: 0; }
+.item-body code { background: var(--bg-elev-2); padding: 2px 5px; border-radius: 3px; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+.item-body pre { background: var(--bg-elev-2); padding: 12px; border-radius: 6px; margin: 8px 0; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.5; border: 1px solid var(--border); }
+.item-body ul, .item-body ol { margin-left: 20px; margin-top: 6px; margin-bottom: 6px; }
+.item-body li { margin-bottom: 4px; }
+.item-body table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }
+.item-body th, .item-body td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+.item-body th { background: var(--bg-elev-2); font-weight: 600; }
+
+/* details (how-to expandable) */
+.item-body details { margin: 8px 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-elev-2); }
+.item-body details summary { padding: 9px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--info-clr); list-style: none; user-select: none; }
+.item-body details summary::-webkit-details-marker { display: none; }
+.item-body details summary::before { content: '▶ '; font-size: 10px; }
+.item-body details[open] summary::before { content: '▼ '; }
+.item-body details > *:not(summary) { padding: 10px 14px 12px; }
+
+/* glossary */
+.item-glossary { margin-top: 14px; border: 1px solid rgba(13,148,136,0.25); border-radius: 8px; padding: 10px 16px; background: rgba(13,148,136,0.04); }
+.item-glossary::before { content: '📖 용어 풀이'; display: block; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--glossary-clr); margin-bottom: 8px; letter-spacing: 0.05em; }
+.item-glossary dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+.item-glossary dt { font-weight: 700; color: var(--glossary-clr); white-space: nowrap; padding-top: 2px; }
+.item-glossary dd { color: var(--text-dim); }
+
+/* inline term + hover tooltip (hybrid glossary — term is a marked span, NOT a link) */
+.term { position: relative; border-bottom: 1px dotted var(--glossary-clr); cursor: help; }
+.term > .tip {
+  position: absolute; left: 0; top: 100%; z-index: 50;
+  width: max-content; max-width: min(340px, 80vw);
+  background: var(--text); color: #f9fafb;
+  font-family: var(--sans); font-size: 12.5px; line-height: 1.5; font-weight: 400;
+  padding: 8px 11px; border-radius: 7px; box-shadow: var(--shadow-md);
+  white-space: normal; text-align: left;
+  visibility: hidden; opacity: 0; transform: translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease; pointer-events: none;
+}
+.term:hover > .tip, .term:focus-within > .tip { visibility: visible; opacity: 1; transform: translateY(0); pointer-events: auto; }
+.term > .tip a { color: #93c5fd; text-decoration: none; font-weight: 600; white-space: nowrap; margin-left: 6px; }
+.term > .tip a:hover { text-decoration: underline; }
+
+/* central glossary section (📖 용어사전) */
+.glossary-section .glossary-entry { background: var(--bg-elev); border: 1px solid var(--border); border-left: 4px solid var(--glossary-clr); border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; box-shadow: var(--shadow-sm); scroll-margin-top: 20px; }
+.glossary-section .glossary-entry:target { box-shadow: 0 0 0 3px rgba(13,148,136,0.18); }
+.glossary-section .g-term { font-weight: 700; color: var(--glossary-clr); font-size: 15px; margin-bottom: 6px; }
+.glossary-section .g-desc { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+.glossary-section .g-desc code { background: var(--bg-elev-2); padding: 2px 5px; border-radius: 3px; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+.glossary-section .g-back { display: inline-block; margin-top: 8px; font-family: var(--mono); font-size: 12px; color: var(--text-faint); text-decoration: none; }
+.glossary-section .g-back:hover { color: var(--text-dim); }
+
+/* depth badge */
+.depth-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-family:var(--mono); font-size:11px; font-weight:600; }
+.depth-easy   { background: rgba(5,150,105,0.10); color: #047857; }
+.depth-middle { background: rgba(79,70,229,0.10); color: #4338ca; }
+.depth-hard   { background: rgba(220,38,38,0.10); color: #b91c1c; }
+
+/* toast */
+.toast { position: fixed; top: 24px; right: 24px; background: var(--summary-clr); color: #ede9fe; padding: 12px 18px; border-radius: 8px; font-family: var(--mono); font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.2s, transform 0.2s; transform: translateY(-10px); z-index: 200; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 980px) {
+  body { grid-template-columns: 1fr; }
+  aside { position: static; max-height: none; }
+  main { padding: 24px 20px 60px; }
+}
+
+/* Mermaid 다이어그램 컨테이너 */
+.mermaid { display:flex; justify-content:center; margin:14px 0; }
+.mermaid svg { max-width:100%; height:auto; }
+.mermaid:not([data-processed]) { white-space:pre; font-family:'JetBrains Mono',monospace;
+  font-size:12px; color:#6b7280; background:#f3f4f6; padding:10px; border-radius:6px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js" integrity="sha384-yQ4mmBBT+vhTAwjFH0toJXNYJ6O4usWnt6EPIdWwrRvx2V/n5lXuDZQwQFeSFydF" crossorigin="anonymous"></script> <!-- pragma: allowlist secret (SRI integrity 해시는 비밀이 아님) -->
+</head>
+<body>
+<aside>
+  <h2>Sections</h2>
+  <ol id="toc"></ol>
+  <div class="toggle-all">
+    <button id="btn-toggle-all">▼ 전체 접기</button>
+  </div>
+</aside>
+<main>
+  <header class="hero" id="top">
+    <h1>herdr 사용법 — msbaek 설정 기준 핫키·워크플로우·CLI</h1>
+    <div class="meta">
+      <b id="total-count">0</b>개 항목 ·
+      <span class="depth-badge depth-middle">Depth: middle</span> ·
+      <span id="gen-date"></span>
+    </div>
+  </header>
+  <div id="sections"></div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = 'claude-explain-2026-11-06-herdr-usage-hotkeys-workflow';
+/*
+ * SECURITY NOTE: EXPLAIN_DATA is authored entirely by the agent (trusted content).
+ * Item body HTML is generated markup — no user input is passed through createContextualFragment.
+ */
+const EXPLAIN_DATA = (() => {
+const k = (s) => `<kbd class="hk-k">${s}</kbd>`;
+const P = `<kbd class="hk-k hk-pf">prefix</kbd>`;
+const T = (slug, label, desc) => `<span class="term" tabindex="0">${label}<span class="tip">${desc} <a href="#g-${slug}">상세↗</a></span></span>`;
+const row = (a, mine, def, tmux) => `<tr><td>${a}</td><td>${mine}</td><td>${def}</td><td>${tmux}</td></tr>`;
+const thead = `<tr><th>동작</th><th>내 설정</th><th>herdr 기본</th><th>tmux 대응</th></tr>`;
+const card = (n, title, keys, sub) => `<div class="hk-card"><span class="hk-n">${n}</span><div class="hk-t">${title}</div><div class="hk-keys">${keys}</div><div class="hk-s">${sub}</div></div>`;
+
+return [
+{
+  id: 's1', title: '1. 한눈에 보기와 핵심 10개 키',
+  summary: 'herdr은 에이전트 상태를 아는 tmux이다. 이 문서의 키는 모두 내 config(prefix = ctrl+a) 기준이며, herdr 기본값과 다른 곳은 두 열로 병기한다.',
+  items: [
+    {
+      id: 's1-1', title: 'herdr = 에이전트 상태를 아는 tmux',
+      body: `
+<style>
+.hk-k{display:inline-block;min-width:22px;padding:2px 7px;margin:0 2px;border:1px solid #cbd5e1;border-bottom-width:3px;border-radius:6px;background:linear-gradient(#fff,#f1f5f9);font-family:var(--mono);font-size:12px;font-weight:600;color:#111827;text-align:center;line-height:1.35;box-shadow:0 1px 1px rgba(0,0,0,.05)}
+.hk-pf{background:linear-gradient(#eef2ff,#e0e7ff);border-color:#a5b4fc;color:#3730a3}
+.hk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:10px 0}
+.hk-card{position:relative;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px 10px;box-shadow:0 1px 2px rgba(0,0,0,.06);transition:transform .15s,box-shadow .15s,border-color .15s}
+.hk-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(79,70,229,.15);border-color:#a5b4fc}
+.hk-n{position:absolute;top:8px;right:10px;font-family:var(--mono);font-size:11px;color:#9ca3af}
+.hk-t{font-weight:700;color:#111827;font-size:13.5px;margin-bottom:8px;padding-right:18px}
+.hk-keys{margin-bottom:6px;line-height:2}
+.hk-s{font-size:11.5px;color:#6b7280;line-height:1.45}
+.hk-ok{padding:4px 10px;border-radius:6px;background:#eef2ff;color:#4338ca;font-size:13px}
+</style>
+<p><b>무엇:</b> herdr은 terminal multiplexer이다. 구조는 ${T('workspace','workspace','workspace: 프로젝트 단위 최상위 컨테이너. tmux session에 대응')}(프로젝트) &gt; ${T('tab','tab','tab: workspace 안의 레이아웃 단위. tmux window에 대응')}(레이아웃) &gt; ${T('pane','pane','pane: 실제 터미널 하나')}(터미널)이며 tmux의 session &gt; window &gt; pane과 1:1로 대응한다. 차이는 sidebar와 ${T('goto','goto picker','goto picker: 에이전트·터미널로 점프하는 검색 팝업 (내 키 prefix u)')}가 Claude Code의 ${T('agent-state','blocked/working/idle/done','에이전트 상태 4종. 상세는 4장')} 상태를 내장 표시한다는 점이다.</p>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;margin:10px 0">
+  <span class="hk-ok">tmux session</span><span style="color:#9ca3af">=</span><span class="hk-ok" style="background:#d1fae5;color:#047857">herdr workspace</span>
+  <span style="color:#d1d5db">|</span>
+  <span class="hk-ok">window</span><span style="color:#9ca3af">=</span><span class="hk-ok" style="background:#d1fae5;color:#047857">tab</span>
+  <span style="color:#d1d5db">|</span>
+  <span class="hk-ok">pane</span><span style="color:#9ca3af">=</span><span class="hk-ok" style="background:#d1fae5;color:#047857">pane</span>
+</div>
+<p><b>왜:</b> 현재 tmux와 병행 평가 중이다. 별도 Ghostty 창에서 실행하고 중첩하지 않는다. 롤백은 브랜치 <code>herdr-trial</code>로 가능하다.</p>
+`,
+      glossary: []
+    },
+    {
+      id: 's1-2', title: '가장 자주 쓸 핵심 10개 (카드)',
+      body: `
+<p><b>무엇:</b> 내 설정에서 일상적으로 사용할 키 10개이다. ${P}는 <code>ctrl+a</code>이다. 카드 아래 표에 herdr 기본값과 tmux 대응이 있다.</p>
+<div class="hk-grid">
+${card(1, 'goto picker', P + k('u'), '에이전트·터미널 점프. tmux cw 대체. 필터 b → Enter')}
+${card(2, '새 tab', P + k('c'), 'tab 이동: ' + k('n') + k('p') + ' / ' + k('1') + '..' + k('9'))}
+${card(3, '좌우 분할', P + k('|'), '또는 ' + k('%') + k('&#92;') + ' (side by side)')}
+${card(4, '상하 분할', P + k('-'), '또는 ' + k('"') + k('_') + ' (stacked)')}
+${card(5, 'pane focus', P + k('h') + k('j') + k('k') + k('l'), '또는 ' + k('ctrl+shift+h/j/k/l') + ' (prefix 불필요)')}
+${card(6, 'pane resize', P + k('H') + k('J') + k('K') + k('L'), '1회씩. 연속은 ' + P + k('shift+r') + ' resize mode')}
+${card(7, 'zoom', P + k('m') + ' / ' + k('z'), 'pane 하나를 전체 화면으로 토글')}
+${card(8, 'copy mode', P + k('y') + ' / ' + k('['), 'v 선택, y 복사, q 종료')}
+${card(9, 'detach', P + k('d'), '서버·에이전트는 계속 실행')}
+${card(10, '도움말', P + k('?'), '현재 바인딩 전체. / 로 필터')}
+</div>
+<table><thead>${thead}</thead><tbody>
+${row('goto picker', P + k('u'), P + k('g'), 'cw / tmux-claude-hatch ' + P + k('u'))}
+${row('새 tab', P + k('c'), P + k('c'), P + k('c'))}
+${row('tab 이동', P + k('n') + '/' + k('p') + ', ' + P + k('1') + '..' + k('9'), '같음', '같음')}
+${row('좌우 분할', P + k('|') + ' (또는 ' + k('%') + k('&#92;') + ')', P + k('v'), P + k('|'))}
+${row('상하 분할', P + k('-') + ' (또는 ' + k('"') + k('_') + ')', P + k('-'), P + k('-'))}
+${row('pane focus', P + k('h/j/k/l') + ' 또는 ' + k('ctrl+shift+h/j/k/l'), P + k('h/j/k/l'), k('Ctrl+hjkl') + ' (vim-tmux-navigator)')}
+${row('pane resize', P + k('H/J/K/L') + ' 1회, 또는 ' + P + k('shift+r') + ' → resize mode', P + k('r'), P + k('hjkl') + ' (반복)')}
+${row('zoom', P + k('m') + ' 또는 ' + k('z'), P + k('z'), P + k('m'))}
+${row('copy mode', P + k('y') + ' 또는 ' + k('['), P + k('['), P + k('y'))}
+${row('detach', P + k('d'), P + k('q'), P + k('d'))}
+${row('도움말', P + k('?'), P + k('?'), P + k('?'))}
+</tbody></table>
+<p><b>왜:</b> tmux 근육 기억(prefix C-a, c, n/p, |, -, m, y, d)을 그대로 유지하도록 맞췄다. 기본값과 달라지는 곳은 goto(g → u), 좌우 분할(v → |), resize(r → shift+r), detach(q → d)이다.</p>
+<p style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:13px"><b>주의:</b> herdr의 split 이름은 tmux와 반대이다. tmux <code>split -h</code>(좌우) = herdr <code>split_vertical</code>, tmux <code>-v</code>(상하) = herdr <code>split_horizontal</code>. 키는 같게 맞춰 두었으므로 config를 편집할 때만 주의한다.</p>
+`,
+      glossary: []
+    }
+  ]
+},
+{
+  id: 's2', title: '2. 개념 구조',
+  summary: 'workspace(프로젝트) > tab(레이아웃) > pane(터미널). 서버 단위인 named session은 보통 default 하나면 충분하고, 문서도 "workspace를 먼저 쓰라"고 권고한다.',
+  items: [
+    {
+      id: 's2-1', title: 'workspace > tab > pane 계층',
+      body: `
+<p><b>무엇:</b> herdr 서버(session) 하나 안에 workspace 여러 개, 그 안에 tab, 그 안에 pane이 있다. ID는 <code>w1</code> / <code>w1:t1</code> / <code>w1:p1</code> 형식이고 닫힌 ID는 재사용되지 않는다.</p>
+<div class="mermaid">
+flowchart TD
+  S["server (default named session)"]
+  S --> W1["workspace w1: 프로젝트 A"]
+  S --> W2["workspace w2: 프로젝트 B"]
+  W1 --> T1["tab w1:t1 claude"]
+  W1 --> T2["tab w1:t2 nvim"]
+  W1 --> T3["tab w1:t3 shell"]
+  T1 --> P1["pane w1:p1 Claude Code"]
+  T3 --> P2["pane w1:p2 shell"]
+  T3 --> P3["pane w1:p3 logs"]
+  W1 -.-> PO["popup: lazygit / abtop"]
+</div>
+<p><b>왜:</b> repo, 작업, 조사 하나당 workspace 하나를 권장한다. 생성 시 첫 tab과 root pane이 자동으로 만들어진다.</p>
+<details><summary>어떻게 (권장 구성과 named session)</summary>
+<ul>
+<li>권장 구성(가이드 9.1): workspace = 프로젝트, tab = claude / nvim / shell, popup = lazygit, abtop.</li>
+<li>Claude Code를 Neovim <code>:terminal</code>이 아닌 별도 tab에 두는 이유: Neovim <code>:restart</code>(ZR)가 내부 터미널 프로세스를 종료하기 때문이다.</li>
+<li>named session: <code>herdr --session &lt;name&gt;</code>. 서버별 별도 소켓·상태를 가진다. 일반적으로 default session 하나면 충분하다.</li>
+</ul>
+</details>
+`,
+      glossary: []
+    }
+  ]
+},
+{
+  id: 's3', title: '3. 전체 키 치트시트 (내 설정)',
+  summary: 'prefix = ctrl+a. 표의 "내 설정"이 실제 동작 키이고 "herdr 기본"은 비교용이다. 키 충돌 지점(prefix g, prefix e, prefix r, ctrl+a)을 주의한다.',
+  items: [
+    {
+      id: 's3-1', title: '3.1 Workspace 키 (= tmux session)',
+      body: `
+<p><b>무엇:</b> 프로젝트 단위 조작 키이다. ${T('prefix','prefix mode','prefix mode: prefix 키(내 설정 ctrl+a)를 누른 직후 다음 한 키를 명령으로 해석하는 상태')}로 진입한다.</p>
+<table><thead>${thead}</thead><tbody>
+${row('workspace picker', P + k('w'), P + k('w'), 'choose-tree (prefix s)')}
+${row('새 workspace', P + k('shift+n'), P + k('shift+n'), 'new-session')}
+${row('새 git ' + T('worktree','worktree','git worktree: 같은 repo의 브랜치를 별도 디렉터리로 체크아웃한 작업 사본') + ' workspace', P + k('shift+g'), '-', '-')}
+${row('이름 변경 / 닫기', P + k('shift+w') + ' / ' + P + k('shift+d'), '-', '-')}
+${row('이전/다음 workspace', k('ctrl+shift+[') + ' / ' + k('ctrl+shift+]') + ' (prefix 불필요)', '-', 'switch-client -p/-n')}
+${row('workspace 순서 이동', P + k('{') + ' / ' + P + k('}'), '-', '-')}
+${row('sidebar 토글', P + k('b'), '-', '-')}
+</tbody></table>
+<p><b>왜:</b> workspace 순서 이동은 저자의 <code>ctrl+shift+↑↓</code>를 방향키가 없는 Iris SE 키보드용으로 치환한 것이다. <code>~/bin/herdr-move-workspace</code> 스크립트가 소켓 API <code>workspace.move</code>를 호출한다.</p>
+`
+    },
+    {
+      id: 's3-2', title: '3.2 Tab 키 (= tmux window)',
+      body: `
+<p><b>무엇:</b> tab 조작 키이다. tmux 습관과 같다.</p>
+<table><thead><tr><th>동작</th><th>내 키</th></tr></thead><tbody>
+<tr><td>새 tab</td><td>${P}${k('c')}</td></tr>
+<tr><td>이름 변경</td><td>${P}${k(',')}</td></tr>
+<tr><td>닫기</td><td>${P}${k('&amp;')}</td></tr>
+<tr><td>이전 / 다음</td><td>${P}${k('p')} / ${P}${k('n')}</td></tr>
+<tr><td>번호 이동</td><td>${P}${k('1')}..${k('9')}</td></tr>
+<tr><td>tab 순서 이동</td><td>${P}${k('&lt;')} / ${P}${k('&gt;')} (저자 <code>ctrl+shift+←→</code> 치환)</td></tr>
+</tbody></table>
+`
+    },
+    {
+      id: 's3-3', title: '3.3 Pane 키',
+      body: `
+<p><b>무엇:</b> 분할, 이동, resize, zoom, 닫기 키이다. 키 이동은 ${P}${k('h/j/k/l')} 또는 prefix 없이 ${k('ctrl+shift+h/j/k/l')}를 사용한다.</p>
+<table><thead><tr><th>동작</th><th>내 키</th><th>비고</th></tr></thead><tbody>
+<tr><td>좌우 분할</td><td>${P}${k('|')} ${k('%')} ${k('&#92;')}</td><td>기본 prefix v</td></tr>
+<tr><td>상하 분할</td><td>${P}${k('-')} ${k('"')} ${k('_')}</td><td>기본과 동일</td></tr>
+<tr><td>마지막 pane 토글</td><td>${P}${k(';')}</td><td>순환은 ${P}${k('tab')} / ${k('shift+tab')} (기본)</td></tr>
+<tr><td>resize 1회</td><td>${P}${k('H/J/K/L')}</td><td><code>herdr pane resize</code> CLI 1회</td></tr>
+<tr><td>${T('resize','resize mode','resize mode: 진입 후 h/j/k/l로 크기를 연속 조정하고 esc로 종료하는 모드')}</td><td>${P}${k('shift+r')}</td><td>진입 후 hjkl 연속, esc 종료</td></tr>
+<tr><td>zoom</td><td>${P}${k('m')} / ${k('z')}</td><td></td></tr>
+<tr><td>닫기</td><td>${P}${k('x')}</td><td>기본</td></tr>
+<tr><td>다른 pane 모두 닫기</td><td>${P}${k('e')}</td><td>저자 jq 스크립트 = tmux <code>kill-pane -a</code></td></tr>
+<tr><td>pane 이름 변경</td><td>${P}${k('shift+p')}</td><td>기본</td></tr>
+<tr><td>설정 재로드</td><td>${P}${k('r')}</td><td>기본은 shift+r. 기본 prefix r이 resize mode여서 둘을 맞바꿈</td></tr>
+</tbody></table>
+<p style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:13px"><b>덮어쓰기 주의:</b> herdr 기본에서 scrollback을 에디터로 여는 키는 ${P}${k('e')}였다. 내 설정은 prefix e를 "다른 pane 닫기"로 덮어썼으므로 <code>edit_scrollback</code>이 미바인딩 상태이다. 필요하면 config에서 <code>edit_scrollback</code> 키를 지정한다.</p>
+`
+    },
+    {
+      id: 's3-4', title: '3.4 Custom command 키',
+      body: `
+<p><b>무엇:</b> 저자 설정과 내가 추가한 command이다. ${T('cmdtype','popup / pane / shell command type','custom command의 실행 방식. popup=떠 있는 창, pane=임시 pane(종료 시 닫힘), shell=백그라운드 셸 실행')} 중 어떤 것인지 함께 표시한다.</p>
+<table><thead><tr><th>키</th><th>동작</th><th>type</th></tr></thead><tbody>
+<tr><td>${P}${k('o')}</td><td>현재 pane cwd를 Finder로 열기</td><td>shell</td></tr>
+<tr><td>${P}${k('g')}</td><td>lazygit (종료 시 pane 닫힘). herdr 기본 prefix g(goto)를 덮어씀 → goto는 prefix u</td><td>pane</td></tr>
+<tr><td>${P}${k('G')}</td><td>lazygit 90%x90% (내 tmux prefix G와 동일)</td><td>popup</td></tr>
+<tr><td>${P}${k('a')}</td><td>abtop (내 tmux prefix a). popup 동작 미검증</td><td>popup</td></tr>
+<tr><td>${P}${k('shift+o')}</td><td>마지막 toast를 보낸 pane(open_notification_target)으로 점프</td><td>내장</td></tr>
+<tr><td>${P}${k('s')}</td><td>설정 화면: theme / indicators / sound / toasts / integrations 탭</td><td>기본</td></tr>
+</tbody></table>
+`
+    },
+    {
+      id: 's3-5', title: '3.5 goto picker 내부 키 (prefix u)',
+      body: `
+<p><b>무엇:</b> 이 picker가 내 tmux <code>cw</code>(응답 대기 우선 점프)의 대체이다. 흐름은 ${P}${k('u')} → ${k('b')} → ${k('Enter')}이다.</p>
+<table><thead><tr><th>입력</th><th>동작</th></tr></thead><tbody>
+<tr><td>${k('Enter')}</td><td>점프</td></tr>
+<tr><td>${k('/')}</td><td>검색 (이름, agent 종류, tab, workspace, branch, 경로)</td></tr>
+<tr><td>${k('↑')}${k('↓')} 또는 ${k('j')}${k('k')}</td><td>이동 (입력 중이 아닐 때)</td></tr>
+<tr><td>${k('←')}${k('→')}</td><td>이전/다음 workspace 섹션의 첫 항목</td></tr>
+<tr><td>${k('b')} ${k('w')} ${k('i')} ${k('d')} ${k('a')}</td><td>필터: blocked / working / idle / done / 전체</td></tr>
+</tbody></table>
+`
+    },
+    {
+      id: 's3-6', title: '3.6 copy mode, 입력창, 마우스',
+      body: `
+<p><b>무엇:</b> ${T('copy','copy mode','copy mode: pane의 scrollback을 키보드로 탐색·선택·복사하는 모드. 진입 중에도 프로세스는 계속 실행')}는 ${P}${k('y')} 또는 ${P}${k('[')}로 진입한다.</p>
+<table><thead><tr><th>구분</th><th>키</th></tr></thead><tbody>
+<tr><td>이동</td><td>${k('h/j/k/l')} ${k('w/b/e')} ${k('W/B/E')} ${k('{')}${k('}')} ${k('ctrl+u/d')} ${k('ctrl+b/f')} ${k('PageUp/Down')}</td></tr>
+<tr><td>검색</td><td>${k('/')} ${k('?')} (대소문자가 섞이면 case-sensitive), ${k('n')} ${k('N')}</td></tr>
+<tr><td>선택</td><td>${k('v')} 또는 ${k('Space')}</td></tr>
+<tr><td>복사</td><td>${k('y')} 또는 ${k('Enter')}</td></tr>
+<tr><td>종료</td><td>${k('q')} / ${k('esc')} (esc는 먼저 선택·검색을 해제)</td></tr>
+</tbody></table>
+<p>마우스: 클릭으로 pane/tab/workspace/agent 선택, 경계 드래그로 resize, 드래그 선택, 우클릭 메뉴. <code>mouse_capture=true</code>(기본). <code>copy_on_select=false</code>이므로 드래그로 선택만 되고 복사는 ${k('y')}로 한다.</p>
+<p><b>텍스트 입력창</b>(이름 변경·필터·검색)은 readline 유사: ${k('ctrl+a/e')} ${k('alt+b/f')} ${k('ctrl+w')} ${k('ctrl+u/k')} ${k('ctrl+y')}.</p>
+<p style="background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:8px 12px;font-size:13px"><b>알려진 충돌:</b> prefix가 ctrl+a이므로 shell의 줄 처음 이동 ${k('Ctrl+A')}는 사용할 수 없다. tmux의 send-prefix에 대응하는 기능은 미확인이다. Home 키가 없는 키보드이므로 zsh에서 <code>ctrl+x ctrl+a</code> 같은 대체 바인딩을 고려하거나, 평가 후 prefix를 ctrl+t(저자)로 변경하는 방안을 검토한다.</p>
+`
+    }
+  ]
+},
+{
+  id: 's4', title: '4. 에이전트 상태와 알림',
+  summary: 'herdr은 Claude Code 상태를 working / blocked / done / idle / unknown으로 분류한다. blocked는 엄격하게 판정하며, blocked 하나가 pane, tab, workspace까지 롤업된다.',
+  items: [
+    {
+      id: 's4-1', title: '상태 전이',
+      body: `
+<p><b>무엇:</b> 에이전트 상태는 ${T('agent-state','working / blocked / done / idle','working=실행 중, blocked=승인·질문 UI 감지로 입력 필요, done=끝났고 아직 안 봄, idle=끝났고 본 상태 또는 대기')}이다. unknown은 에이전트는 있으나 분류가 불가능한 경우이다.</p>
+<div class="mermaid">
+stateDiagram-v2
+  [*] --> idle
+  idle --> working: 프롬프트 입력
+  working --> blocked: 승인/질문/권한 UI 감지
+  blocked --> working: 사용자가 응답
+  working --> done: 작업 종료 (아직 안 봄)
+  done --> idle: 사용자가 해당 pane을 봄
+  working --> unknown: 분류 불가
+  unknown --> working: 재감지
+</div>
+<p><b>왜:</b> blocked는 알려진 승인/질문 UI가 화면 하단에 보일 때만 판정한다. 그렇지 않으면 idle로 fallback한다. 따라서 idle이 "승인해도 된다"는 뜻은 아니다.</p>
+<details><summary>어떻게 (감지와 롤업)</summary>
+<ul>
+<li>감지: pane의 foreground 프로세스와 화면 하단 버퍼를 detection manifest로 매칭한다.</li>
+<li>${T('integration','integration','integration: Claude Code hook이 소켓으로 상태를 직접 보고하는 연동. 설치 시 화면 매칭보다 정확')}(설치됨, v11)이 있으면 Claude Code hook이 상태를 직접 보고하므로 더 정확하다.</li>
+<li>롤업: blocked 에이전트 하나가 pane, tab, workspace를 모두 blocked로 표시한다. done은 볼 때까지 유지된다.</li>
+<li>sidebar agents 섹션: Claude 행은 2줄이다 (상태 아이콘, 머신, workspace, tab / Claude 세션 요약 제목). 저자 설정 <code>rows_by_agent</code>.</li>
+<li>toast: <code>ui.toast.delivery="herdr"</code>(앱 내 toast). 현재 보고 있는 tab에서는 억제된다. 소리는 평가 기간 전체 off.</li>
+</ul>
+</details>
+`
+    },
+    {
+      id: 's4-2', title: '응답 대기 세션 찾기: tmux cw vs herdr',
+      body: `
+<p><b>무엇:</b> 두 방식의 흐름 비교이다. herdr은 hook이 소켓으로 직접 보고하고 picker에서 필터 한 번으로 끝난다.</p>
+<div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant C as Claude Code
+  participant H as hook (integration)
+  participant S as herdr 서버 (소켓)
+  participant U as 사용자
+  C->>H: 승인 요청 (blocked)
+  H->>S: 상태 보고
+  S-->>U: sidebar blocked 표시 + toast
+  U->>S: prefix u (goto picker)
+  U->>S: b (blocked 필터)
+  U->>S: Enter
+  S-->>C: 해당 pane으로 focus 이동
+</div>
+<table><thead><tr><th></th><th>tmux</th><th>herdr</th></tr></thead><tbody>
+<tr><td>경로</td><td>cc-attention hook → <code>@cc_state</code> → 정렬 → switch (<code>cw</code>)</td><td>hook → 소켓 → sidebar / goto picker</td></tr>
+<tr><td>키 입력</td><td><code>cw</code></td><td>${P}${k('u')} ${k('b')} ${k('Enter')}</td></tr>
+</tbody></table>
+<p><b>왜:</b> prefix shift+o는 마지막 알림(toast)을 보낸 pane으로 바로 점프한다. 평가 기준 중 하나가 "goto picker가 cw를 키 입력 수로 대체하는가"이다.</p>
+`
+    }
+  ]
+},
+{
+  id: 's5', title: '5. 재시작·복원',
+  summary: 'detach는 프로세스를 유지하고, 서버 재시작이나 재부팅은 프로세스를 소멸시키지만 레이아웃은 복원한다. Claude Code는 claude --resume으로 자동 재개된다.',
+  items: [
+    {
+      id: 's5-1', title: '무엇이 살아남고 무엇이 사라지나',
+      body: `
+<p><b>무엇:</b> 상황별 보존 범위이다.</p>
+<table><thead><tr><th>상황</th><th>프로세스</th><th>layout / cwd / focus</th><th>화면 내용</th></tr></thead><tbody>
+<tr><td>detach (${P}${k('d')}) / reattach</td><td>유지</td><td>유지</td><td>유지</td></tr>
+<tr><td>서버 재시작 / 재부팅</td><td>소멸 (저장된 디렉터리의 새 shell)</td><td>복원</td><td>${T('pane-history','pane_history=true','pane_history: 마지막 출력을 session-history.json에 저장해 재시작 후 화면을 재생하는 옵션')}면 재생</td></tr>
+<tr><td><code>herdr server stop</code></td><td>default session과 모든 pane 종료</td><td>스냅샷에서 복원</td><td>-</td></tr>
+</tbody></table>
+<p><b>왜:</b> Claude Code 세션 재개는 integration v6+에서 pane이 세션 ID를 보고했으면 <code>claude --resume &lt;id&gt;</code>를 자동 실행한다 (<code>session.resume_agents_on_restore=true</code> 기본).</p>
+<details><summary>어떻게 (보안 주의와 스냅샷)</summary>
+<ul>
+<li><code>pane_history=true</code>(내 설정)는 마지막 출력을 <code>session-history.json</code>에 저장한다. 비밀값이 포함될 수 있다. 위치는 <code>~/.config/herdr/</code> 아래이며 dotfiles repo 밖이다. 토큰을 출력한 뒤에는 파일 삭제를 고려한다.</li>
+<li>스냅샷 <code>session-snapshots/</code> 48개, 손상 복구본 <code>session-backups/</code>.</li>
+</ul>
+</details>
+`
+    }
+  ]
+},
+{
+  id: 's6', title: '6. CLI (Claude가 직접 호출 가능)',
+  summary: 'herdr pane 안에서 HERDR_ENV=1이면 Claude Code가 herdr CLI를 직접 호출해 pane을 만들고, 다른 에이전트에게 작업을 위임할 수 있다.',
+  items: [
+    {
+      id: 's6-1', title: '조회와 pane 조작',
+      body: `
+<p><b>무엇:</b> 상태 조회와 pane 제어 명령이다.</p>
+<pre class="pseudo">
+# 조회
+herdr status
+herdr workspace list
+herdr tab list --workspace w1
+herdr pane list
+herdr agent list
+herdr pane current --current
+
+# pane 조작
+herdr pane split --current --direction right|down --ratio 0.5 --cwd "$PWD" --no-focus
+    # ratio = 원래 pane이 유지하는 비율 (tmux -l 과 반대)
+herdr pane run &lt;id&gt; "&lt;cmd&gt;"            # Enter 포함 제출
+herdr pane send-text / send-keys
+herdr pane read &lt;id&gt; --lines 50
+herdr pane wait-output &lt;id&gt; --match "text" --timeout 60000
+herdr pane close / herdr pane resize --direction left
+</pre>
+<p><b>왜:</b> Claude가 직접 테스트 서버를 옆 pane에 띄우고 출력 대기까지 자동화할 수 있다.</p>
+`
+    },
+    {
+      id: 's6-2', title: '에이전트 위임과 workspace / worktree',
+      body: `
+<p><b>무엇:</b> 에이전트 간 위임 명령과 workspace 관리 명령이다. 에이전트 이름 규칙은 <code>[a-z][a-z0-9_-]{0,31}</code>이며 살아 있는 에이전트 사이에서 유일해야 한다.</p>
+<div class="mermaid">
+sequenceDiagram
+  participant M as main Claude
+  participant H as herdr CLI
+  participant R as reviewer agent
+  M->>H: agent start reviewer --kind claude --pane w1:p2
+  H->>R: 시작
+  M->>H: agent prompt reviewer "리뷰해줘" --wait --timeout 120000
+  H->>R: 프롬프트 전달
+  R-->>H: 완료 (blocked면 agent_blocked로 거부)
+  H-->>M: 결과
+</div>
+<pre class="pseudo">
+herdr agent wait reviewer --until blocked
+herdr agent read / explain(상태 판정 근거) / attach
+
+herdr workspace create --cwd ~/git/foo --label foo --focus
+herdr workspace focus w2
+herdr workspace close w2 [--group]
+
+herdr worktree create --branch feat/x --base main   # git worktree 생성 + workspace로 열고 부모와 그룹
+herdr worktree open --branch ... / list
+herdr worktree remove --workspace w3 [--force]
+</pre>
+<details><summary>어떻게 (기타 명령과 환경변수)</summary>
+<ul>
+<li><code>herdr notification show "제목" --body "..." --sound done</code></li>
+<li><code>herdr server reload-config</code> / <code>herdr config check</code> / <code>herdr config reset-keys</code>(키 초기화, 백업 생성)</li>
+<li><code>herdr update</code> (brew 설치본은 <code>brew upgrade herdr</code>), <code>herdr integration status</code></li>
+<li>환경변수: <code>HERDR_ENV</code>, <code>HERDR_WORKSPACE_ID</code>, <code>HERDR_TAB_ID</code>, <code>HERDR_PANE_ID</code>, <code>HERDR_ACTIVE_PANE_CWD</code>(custom command용), <code>HERDR_SOCKET_PATH</code></li>
+<li>Claude Code에게 herdr를 다루게 하려면 <code>herdr --skill</code> 출력을 스킬로 제공한다 (HERDR_ENV=1 검사 후 CLI 사용).</li>
+</ul>
+</details>
+`
+    }
+  ]
+},
+{
+  id: 's7', title: '7. 평가 항목, 롤백, 설정 파일',
+  summary: '평가 게이트 5개와 판단 기준 4개를 통과해야 tmux를 대체한다. 롤백 절차와 설정 위치를 함께 정리한다.',
+  items: [
+    {
+      id: 's7-1', title: '평가할 것과 알려진 손실',
+      body: `
+<p><b>무엇:</b> 가이드 Step 4, 6의 평가 항목이다.</p>
+<table><thead><tr><th>구분</th><th>항목</th></tr></thead><tbody>
+<tr><td>게이트</td><td>Shift+Enter 줄바꿈(Claude Code 입력창) / 한글 IME(prefix 직후 자모 오인식 → experimental 키 3개) / snacks.image / ctrl+shift+hjkl을 Claude Code가 가로채지 않는지 / AeroSpace 창 제목</td></tr>
+<tr><td>평가 기준</td><td>goto picker가 cw를 대체하는가(키 입력 수) / AeroSpace 다중 창 vs herdr 단일 창 전환 비용 / 상태 오탐 횟수 / 재시작 후 <code>claude --resume</code> 실제 동작</td></tr>
+<tr><td>알려진 손실</td><td>vim-tmux-navigator(Neovim과 pane의 Ctrl+hjkl 통합 이동) 대체 없음 / tpm 플러그인 / cw, cj, cwq는 herdr pane에서 미동작</td></tr>
+</tbody></table>
+<p><b>왜:</b> 알려진 손실 중 vim-tmux-navigator가 일상 불편 1순위이다. prefix 없는 ctrl+shift+hjkl이 대체재 후보이다.</p>
+`
+    },
+    {
+      id: 's7-2', title: '롤백과 설정 파일 위치',
+      body: `
+<p><b>무엇:</b> 설정 파일은 <code>~/dotfiles/.config/herdr/config.toml</code>이고 stow symlink로 <code>~/.config/herdr/config.toml</code>에 연결된다.</p>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;margin:8px 0">
+  <span class="hk-ok">config.toml 수정</span><span style="color:#9ca3af">→</span>
+  <span class="hk-ok"><code>herdr config check</code></span><span style="color:#9ca3af">→</span>
+  <span class="hk-ok" style="background:#d1fae5;color:#047857"><code>herdr server reload-config</code> 또는 ${P}${k('r')}</span>
+</div>
+<pre class="pseudo">
+# 롤백 (브랜치 herdr-trial 사용 중이므로 가역적)
+brew uninstall herdr
+두 repo checkout main
+symlink 제거
+~/.config/herdr.bak-2026-07 복원
+</pre>
+<details><summary>어떻게 (헬퍼, 테마, 상태 파일)</summary>
+<ul>
+<li>헬퍼: <code>~/bin/ide</code>(하단 3분할, tmux/herdr 양용), <code>~/bin/herdr-move-workspace</code>.</li>
+<li>테마: one-light (Ghostty Atom One Light와 동일 계열). 다른 라이트 테마: catppuccin-latte, gruvbox-light, solarized-light, tokyo-night-day, kanagawa-lotus, rose-pine-dawn.</li>
+<li>상태 파일(repo 밖): <code>~/.config/herdr/session.json</code>, <code>session-history.json</code>, <code>herdr.sock</code>, 로그.</li>
+</ul>
+</details>
+`
+    }
+  ]
+}
+];
+})();
+/* Central glossary entries: [{ slug, term, desc }] where desc is agent-authored HTML (trusted).
+ * MUST always be a real array — the builder emits at least [] so this placeholder never stays raw. */
+const GLOSSARY = [
+ {slug:'workspace',term:'workspace',desc:'herdr 최상위 프로젝트 컨테이너. repo, 작업, 조사 하나당 하나를 권장한다. 생성 시 첫 tab과 root pane이 자동 생성된다. ID <code>w1</code>. tmux session에 대응.'},
+ {slug:'tab',term:'tab',desc:'workspace 안의 레이아웃 단위(예: agents, logs, nvim). ID <code>w1:t1</code>. tmux window에 대응.'},
+ {slug:'pane',term:'pane',desc:'실제 터미널. ID <code>w1:p1</code>. 닫힌 ID는 재사용되지 않는다.'},
+ {slug:'named-session',term:'named session',desc:'서버 namespace(별도 소켓·상태). <code>herdr --session &lt;name&gt;</code>으로 지정한다. 문서 권고는 "workspace를 먼저 사용하라"이며 일반적으로 default session 하나면 충분하다.'},
+ {slug:'goto',term:'goto picker',desc:'에이전트·터미널로 점프하는 검색 팝업. 내 키는 <code>prefix u</code>(기본 <code>prefix g</code>). <code>/</code> 검색, <code>b/w/i/d/a</code> 상태 필터. tmux <code>cw</code>를 대체한다.'},
+ {slug:'prefix',term:'prefix mode',desc:'prefix 키(내 설정 <code>ctrl+a</code>, 기본 <code>ctrl+b</code>)를 누른 직후 다음 한 키를 herdr 명령으로 해석하는 상태. tmux prefix와 같은 개념.'},
+ {slug:'resize',term:'resize mode',desc:'<code>prefix shift+r</code>로 진입해 <code>h/j/k/l</code>로 pane 크기를 연속 조정하고 <code>esc</code>로 종료하는 모드. 1회 조정은 <code>prefix H/J/K/L</code>.'},
+ {slug:'copy',term:'copy mode',desc:'pane scrollback을 키보드로 탐색·검색·선택·복사하는 모드(<code>prefix y</code> 또는 <code>[</code>). 진입 중에도 pane 프로세스는 계속 실행된다.'},
+ {slug:'agent-state',term:'blocked / idle / done / working',desc:'<b>working</b> 실행 중. <b>blocked</b> 승인·질문·권한 UI가 화면 하단에 보여 입력이 필요. <b>done</b> 끝났고 아직 보지 않음. <b>idle</b> 끝났고 봤거나 대기 중. blocked가 아니면 idle로 fallback하므로 idle이 "승인해도 된다"는 뜻은 아니다. blocked 하나는 pane, tab, workspace로 롤업된다.'},
+ {slug:'integration',term:'integration',desc:'Claude Code hook이 소켓으로 에이전트 상태와 세션 ID를 herdr에 직접 보고하는 연동. 화면 매칭보다 정확하고, v6+는 <code>claude --resume</code> 자동 재개를 지원한다. <code>herdr integration status</code>로 확인.'},
+ {slug:'worktree',term:'worktree',desc:'git worktree. 같은 repo의 브랜치를 별도 디렉터리로 체크아웃한 작업 사본. herdr은 <code>prefix shift+g</code> 또는 <code>herdr worktree create</code>로 worktree를 만들고 workspace로 열어 부모와 그룹으로 묶는다.'},
+ {slug:'pane-history',term:'pane_history',desc:'설정 옵션. true이면 pane의 마지막 출력을 <code>session-history.json</code>에 저장해 재시작 후 화면을 재생한다. 비밀값이 포함될 수 있으므로 파일 위치(<code>~/.config/herdr/</code>)와 삭제를 관리한다.'},
+ {slug:'cmdtype',term:'popup / pane / shell command type',desc:'custom command의 실행 방식. <b>popup</b> 크기 지정 떠 있는 창(예: lazygit 90%x90%). <b>pane</b> 임시 pane에서 실행하고 종료 시 닫힘. <b>shell</b> 화면 없이 셸 명령만 실행(예: Finder 열기). 환경변수 <code>HERDR_ACTIVE_PANE_CWD</code>를 사용할 수 있다.'}
+];
+
+function saveToggleState(allOpen) {
+  try { localStorage.setItem(STORAGE_KEY + '-expand', allOpen ? '1' : '0'); } catch {}
+}
+
+function loadToggleState() {
+  try { return localStorage.getItem(STORAGE_KEY + '-expand') !== '0'; } catch { return true; }
+}
+
+function renderGlossary(glossary) {
+  if (!glossary || !glossary.length) return null;
+  const div = document.createElement('div');
+  div.className = 'item-glossary';
+  const dl = document.createElement('dl');
+  glossary.forEach(({ term, desc }) => {
+    const dt = document.createElement('dt');
+    dt.textContent = term;
+    const dd = document.createElement('dd');
+    dd.textContent = desc;
+    dl.append(dt, dd);
+  });
+  div.appendChild(dl);
+  return div;
+}
+
+function renderItem(item) {
+  const div = document.createElement('div');
+  div.className = 'item';
+  div.dataset.id = item.id;
+
+  const idSpan = document.createElement('span');
+  idSpan.className = 'item-id';
+  idSpan.textContent = item.id;
+
+  const titleDiv = document.createElement('div');
+  titleDiv.className = 'item-title';
+  titleDiv.textContent = item.title;
+
+  /* body: agent-authored HTML via createContextualFragment. <style>/<svg> apply; <script> is forbidden by agent policy (not by this mechanism). Only trusted EXPLAIN_DATA flows here — no user input. */
+  const body = document.createElement('div');
+  body.className = 'item-body';
+  const range = document.createRange();
+  range.selectNodeContents(body);
+  body.appendChild(range.createContextualFragment(item.body));
+
+  div.append(idSpan, titleDiv, body);
+
+  const glossaryEl = renderGlossary(item.glossary);
+  if (glossaryEl) div.appendChild(glossaryEl);
+
+  return div;
+}
+
+function renderSections() {
+  const container = document.getElementById('sections');
+  let total = 0;
+  EXPLAIN_DATA.forEach(sec => {
+    const secEl = document.createElement('section');
+    secEl.className = 's';
+    secEl.id = sec.id;
+
+    const h2 = document.createElement('h2');
+    h2.textContent = sec.title;
+    secEl.appendChild(h2);
+
+    if (sec.summary) {
+      const sumEl = document.createElement('div');
+      sumEl.className = 'sec-summary';
+      sumEl.textContent = sec.summary;
+      secEl.appendChild(sumEl);
+    }
+
+    sec.items.forEach(item => { total++; secEl.appendChild(renderItem(item)); });
+    container.appendChild(secEl);
+  });
+  document.getElementById('total-count').textContent = total;
+}
+
+function renderTOC() {
+  const toc = document.getElementById('toc');
+  EXPLAIN_DATA.forEach(sec => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + sec.id;
+    a.textContent = sec.title;
+    li.appendChild(a);
+    toc.appendChild(li);
+  });
+  if (GLOSSARY && GLOSSARY.length) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#glossary';
+    a.textContent = '📖 용어사전';
+    li.appendChild(a);
+    toc.appendChild(li);
+  }
+}
+
+function renderGlossarySection() {
+  if (!GLOSSARY || !GLOSSARY.length) return;
+  const container = document.getElementById('sections');
+  const sec = document.createElement('section');
+  sec.className = 's glossary-section';
+  sec.id = 'glossary';
+
+  const h2 = document.createElement('h2');
+  h2.textContent = '📖 용어사전';
+  sec.appendChild(h2);
+
+  GLOSSARY.forEach(g => {
+    const entry = document.createElement('div');
+    entry.className = 'glossary-entry';
+    entry.id = 'g-' + g.slug;
+
+    const term = document.createElement('div');
+    term.className = 'g-term';
+    term.textContent = g.term;
+
+    /* desc: agent-authored HTML (trusted EXPLAIN_DATA sibling) — render as fragment for code/emphasis. */
+    const desc = document.createElement('div');
+    desc.className = 'g-desc';
+    const range = document.createRange();
+    range.selectNodeContents(desc);
+    desc.appendChild(range.createContextualFragment(g.desc));
+
+    const back = document.createElement('a');
+    back.className = 'g-back';
+    back.href = '#top';
+    back.textContent = '맨 위로 ↑';
+
+    entry.append(term, desc, back);
+    sec.appendChild(entry);
+  });
+
+  container.appendChild(sec);
+}
+
+function attachEvents() {
+  /* TOC highlight via IntersectionObserver */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting)
+        document.querySelectorAll('#toc a').forEach(a => a.classList.toggle('current', a.getAttribute('href') === '#' + e.target.id));
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('section.s').forEach(s => observer.observe(s));
+
+  /* expand / collapse all <details> */
+  const btn = document.getElementById('btn-toggle-all');
+  let allOpen = loadToggleState();
+
+  function applyToggle() {
+    document.querySelectorAll('.item-body details').forEach(d => { d.open = allOpen; });
+    btn.textContent = allOpen ? '▼ 전체 접기' : '▶ 전체 펼치기';
+    saveToggleState(allOpen);
+  }
+
+  btn.addEventListener('click', () => { allOpen = !allOpen; applyToggle(); });
+
+  /* apply saved state after render */
+  applyToggle();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('gen-date').textContent = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric' }) + ' 생성';
+
+renderTOC();
+renderSections();
+renderGlossarySection();
+
+/* Mermaid: head CDN loaded it; render the .mermaid blocks injected by renderSections(). */
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'strict' });
+  try { mermaid.run({ querySelector: '.mermaid' }); }
+  catch (e) { console.error('mermaid.run failed', e); }
+}
+attachEvents();
+</script>
+</body>
+</html>
