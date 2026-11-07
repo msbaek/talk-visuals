@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>herdr 사용법 — msbaek 설정 기준 핫키·워크플로우·CLI — Explain</title>
+<title>herdr 사용법 — msbaek 설정 기준 핫키·워크플로우·CLI (2026-11-07) — Explain</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -151,7 +151,7 @@ section.s > h2 { font-size: 21px; margin-bottom: 10px; }
 </main>
 <div class="toast" id="toast"></div>
 <script>
-const STORAGE_KEY = 'claude-explain-2026-11-06-herdr-usage-hotkeys-workflow';
+const STORAGE_KEY = 'claude-explain-2026-11-07-herdr-usage-hotkeys-workflow';
 /*
  * SECURITY NOTE: EXPLAIN_DATA is authored entirely by the agent (trusted content).
  * Item body HTML is generated markup — no user input is passed through createContextualFragment.
@@ -199,33 +199,20 @@ return [
     {
       id: 's1-2', title: '가장 자주 쓸 핵심 10개 (카드)',
       body: `
-<p><b>무엇:</b> 내 설정에서 일상적으로 사용할 키 10개이다. ${P}는 <code>ctrl+a</code>이다. 카드 아래 표에 herdr 기본값과 tmux 대응이 있다.</p>
+<p><b>무엇:</b> 내 설정에서 일상적으로 사용할 키 10개이다. ${P}는 <code>ctrl+a</code>이다. herdr 기본값·tmux 대응을 포함한 전체 목록은 <a href="#s3">3장 치트시트</a>가 단일 기준이다.</p>
 <div class="hk-grid">
 ${card(1, 'goto picker', P + k('u'), '에이전트·터미널 점프. tmux cw 대체. 필터 b → Enter')}
 ${card(2, '새 tab', P + k('c'), 'tab 이동: ' + k('n') + k('p') + ' / ' + k('1') + '..' + k('9'))}
 ${card(3, '좌우 분할', P + k('|'), '또는 ' + k('%') + k('&#92;') + ' (side by side)')}
 ${card(4, '상하 분할', P + k('-'), '또는 ' + k('"') + k('_') + ' (stacked)')}
-${card(5, 'pane focus', P + k('h') + k('j') + k('k') + k('l'), '또는 ' + k('ctrl+shift+h/j/k/l') + ' (prefix 불필요)')}
+${card(5, 'pane focus', P + k('h') + k('j') + k('k') + k('l'), '또는 ' + k('ctrl+alt+h/j/k/l') + ' (prefix 불필요)')}
 ${card(6, 'pane resize', P + k('H') + k('J') + k('K') + k('L'), '1회씩. 연속은 ' + P + k('shift+r') + ' resize mode')}
 ${card(7, 'zoom', P + k('m') + ' / ' + k('z'), 'pane 하나를 전체 화면으로 토글')}
 ${card(8, 'copy mode', P + k('y') + ' / ' + k('['), 'v 선택, y 복사, q 종료')}
-${card(9, 'detach', P + k('d'), '서버·에이전트는 계속 실행')}
+${card(9, 'detach', P + k('d'), '서버·에이전트는 계속 실행. workspace 전환은 ' + P + k('w') + ' → j/k → Enter')}
 ${card(10, '도움말', P + k('?'), '현재 바인딩 전체. / 로 필터')}
 </div>
-<table><thead>${thead}</thead><tbody>
-${row('goto picker', P + k('u'), P + k('g'), 'cw / tmux-claude-hatch ' + P + k('u'))}
-${row('새 tab', P + k('c'), P + k('c'), P + k('c'))}
-${row('tab 이동', P + k('n') + '/' + k('p') + ', ' + P + k('1') + '..' + k('9'), '같음', '같음')}
-${row('좌우 분할', P + k('|') + ' (또는 ' + k('%') + k('&#92;') + ')', P + k('v'), P + k('|'))}
-${row('상하 분할', P + k('-') + ' (또는 ' + k('"') + k('_') + ')', P + k('-'), P + k('-'))}
-${row('pane focus', P + k('h/j/k/l') + ' 또는 ' + k('ctrl+shift+h/j/k/l'), P + k('h/j/k/l'), k('Ctrl+hjkl') + ' (vim-tmux-navigator)')}
-${row('pane resize', P + k('H/J/K/L') + ' 1회, 또는 ' + P + k('shift+r') + ' → resize mode', P + k('r'), P + k('hjkl') + ' (반복)')}
-${row('zoom', P + k('m') + ' 또는 ' + k('z'), P + k('z'), P + k('m'))}
-${row('copy mode', P + k('y') + ' 또는 ' + k('['), P + k('['), P + k('y'))}
-${row('detach', P + k('d'), P + k('q'), P + k('d'))}
-${row('도움말', P + k('?'), P + k('?'), P + k('?'))}
-</tbody></table>
-<p><b>왜:</b> tmux 근육 기억(prefix C-a, c, n/p, |, -, m, y, d)을 그대로 유지하도록 맞췄다. 기본값과 달라지는 곳은 goto(g → u), 좌우 분할(v → |), resize(r → shift+r), detach(q → d)이다.</p>
+<p><b>왜:</b> tmux 근육 기억(prefix C-a, c, n/p, |, -, m, y, d)을 그대로 유지하도록 맞췄다. 기본값과 달라지는 곳은 goto(g → u), 좌우 분할(v → |), resize(r → shift+r), detach(q → d), reload(shift+r → r)이다.</p>
 <p style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:13px"><b>주의:</b> herdr의 split 이름은 tmux와 반대이다. tmux <code>split -h</code>(좌우) = herdr <code>split_vertical</code>, tmux <code>-v</code>(상하) = herdr <code>split_horizontal</code>. 키는 같게 맞춰 두었으므로 config를 편집할 때만 주의한다.</p>
 `,
       glossary: []
@@ -277,13 +264,15 @@ flowchart TD
 <table><thead>${thead}</thead><tbody>
 ${row('workspace picker', P + k('w'), P + k('w'), 'choose-tree (prefix s)')}
 ${row('새 workspace', P + k('shift+n'), P + k('shift+n'), 'new-session')}
-${row('새 git ' + T('worktree','worktree','git worktree: 같은 repo의 브랜치를 별도 디렉터리로 체크아웃한 작업 사본') + ' workspace', P + k('shift+g'), '-', '-')}
+${row('새 git ' + T('worktree','worktree','git worktree: 같은 repo의 브랜치를 별도 디렉터리로 체크아웃한 작업 사본') + ' workspace', '<i>미바인딩</i> — CLI ' + '<code>herdr worktree create</code>', P + k('shift+g'), '-')}
 ${row('이름 변경 / 닫기', P + k('shift+w') + ' / ' + P + k('shift+d'), '-', '-')}
-${row('이전/다음 workspace', k('ctrl+shift+[') + ' / ' + k('ctrl+shift+]') + ' (prefix 불필요)', '-', 'switch-client -p/-n')}
+${row('이전/다음 workspace', k('cmd+shift+h') + ' / ' + k('cmd+shift+l') + ' 또는 ' + k('ctrl+{') + ' / ' + k('ctrl+}') + ' (prefix 불필요)', '-', 'switch-client -p/-n')}
 ${row('workspace 순서 이동', P + k('{') + ' / ' + P + k('}'), '-', '-')}
-${row('sidebar 토글', P + k('b'), '-', '-')}
+${row('sidebar 토글', P + k('b'), P + k('b'), '-')}
 </tbody></table>
-<p><b>왜:</b> workspace 순서 이동은 저자의 <code>ctrl+shift+↑↓</code>를 방향키가 없는 Iris SE 키보드용으로 치환한 것이다. <code>~/bin/herdr-move-workspace</code> 스크립트가 소켓 API <code>workspace.move</code>를 호출한다.</p>
+<p><b>navigate mode</b> (${P}${k('w')} 직후): sidebar의 커서 행이 노란색(<code>theme.custom.selection_bg = #ffd866</code>)으로 강조된다. ${k('j')} / ${k('k')} 이동, ${k('Enter')} 선택, ${k('esc')} 취소. 기본 키는 ↑/↓이며 방향키 없는 키보드용으로 j/k를 추가했다 (<code>navigate_workspace_up/down</code>, 2026-11-07).</p>
+<p><b>왜:</b> workspace 전환은 저자의 <code>ctrl+shift+[ ]</code>에서 <code>cmd+shift+h/l</code>로 바꿨다 (2026-11-07). modifier로 역할을 나눈다: pane 이동 = ctrl+alt+hjkl, workspace(창 단위) 전환 = cmd+shift+h/l. ctrl+shift 유지안은 terminal/vim 계층과 modifier를 공유해 배제했다. 순서 이동 <code>prefix { }</code>는 저자의 <code>ctrl+shift+↑↓</code>를 방향키가 없는 Iris SE용으로 치환한 것이며 <code>~/bin/herdr-move-workspace</code>가 소켓 API <code>workspace.move</code>를 호출한다.</p>
+<p style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:13px"><b>미검증:</b> Ghostty가 <code>cmd+shift+h/l</code>을 herdr pane까지 전달하는지 아직 확인하지 못했다 (cat -v 진단 대기). 전달되지 않으면 Ghostty keybind 변환이 추가로 필요하다. 그 전까지는 <code>ctrl+{</code> / <code>ctrl+}</code>가 동작하는 대체 키이다.</p>
 `
     },
     {
@@ -303,10 +292,11 @@ ${row('sidebar 토글', P + k('b'), '-', '-')}
     {
       id: 's3-3', title: '3.3 Pane 키',
       body: `
-<p><b>무엇:</b> 분할, 이동, resize, zoom, 닫기 키이다. 키 이동은 ${P}${k('h/j/k/l')} 또는 prefix 없이 ${k('ctrl+shift+h/j/k/l')}를 사용한다.</p>
+<p><b>무엇:</b> 분할, 이동, resize, zoom, 닫기 키이다.</p>
 <table><thead><tr><th>동작</th><th>내 키</th><th>비고</th></tr></thead><tbody>
 <tr><td>좌우 분할</td><td>${P}${k('|')} ${k('%')} ${k('&#92;')}</td><td>기본 prefix v</td></tr>
 <tr><td>상하 분할</td><td>${P}${k('-')} ${k('"')} ${k('_')}</td><td>기본과 동일</td></tr>
+<tr><td>pane focus</td><td>${P}${k('h/j/k/l')} 또는 ${k('ctrl+alt+h/j/k/l')}</td><td>ctrl+alt는 prefix 불필요(herdr docs 권장 chord, 2026-11-07). Ghostty <code>macos-option-as-alt=true</code> 필요. tmux의 vim-tmux-navigator Ctrl+hjkl 대체</td></tr>
 <tr><td>마지막 pane 토글</td><td>${P}${k(';')}</td><td>순환은 ${P}${k('tab')} / ${k('shift+tab')} (기본)</td></tr>
 <tr><td>resize 1회</td><td>${P}${k('H/J/K/L')}</td><td><code>herdr pane resize</code> CLI 1회</td></tr>
 <tr><td>${T('resize','resize mode','resize mode: 진입 후 h/j/k/l로 크기를 연속 조정하고 esc로 종료하는 모드')}</td><td>${P}${k('shift+r')}</td><td>진입 후 hjkl 연속, esc 종료</td></tr>
@@ -314,7 +304,8 @@ ${row('sidebar 토글', P + k('b'), '-', '-')}
 <tr><td>닫기</td><td>${P}${k('x')}</td><td>기본</td></tr>
 <tr><td>다른 pane 모두 닫기</td><td>${P}${k('e')}</td><td>저자 jq 스크립트 = tmux <code>kill-pane -a</code></td></tr>
 <tr><td>pane 이름 변경</td><td>${P}${k('shift+p')}</td><td>기본</td></tr>
-<tr><td>설정 재로드</td><td>${P}${k('r')}</td><td>기본은 shift+r. 기본 prefix r이 resize mode여서 둘을 맞바꿈</td></tr>
+<tr><td>설정 재로드</td><td>${P}${k('r')}</td><td>기본은 shift+r. 기본 prefix r이 resize mode여서 둘을 맞바꿈. 직접 chord 변경은 이 키로만 반영 (<a href="#s7">7.2 참조</a>)</td></tr>
+<tr><td>detach</td><td>${P}${k('d')}</td><td>기본 prefix q. 서버·에이전트는 계속 실행</td></tr>
 </tbody></table>
 <p style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:13px"><b>덮어쓰기 주의:</b> herdr 기본에서 scrollback을 에디터로 여는 키는 ${P}${k('e')}였다. 내 설정은 prefix e를 "다른 pane 닫기"로 덮어썼으므로 <code>edit_scrollback</code>이 미바인딩 상태이다. 필요하면 config에서 <code>edit_scrollback</code> 키를 지정한다.</p>
 `
@@ -326,7 +317,7 @@ ${row('sidebar 토글', P + k('b'), '-', '-')}
 <table><thead><tr><th>키</th><th>동작</th><th>type</th></tr></thead><tbody>
 <tr><td>${P}${k('o')}</td><td>현재 pane cwd를 Finder로 열기</td><td>shell</td></tr>
 <tr><td>${P}${k('g')}</td><td>lazygit (종료 시 pane 닫힘). herdr 기본 prefix g(goto)를 덮어씀 → goto는 prefix u</td><td>pane</td></tr>
-<tr><td>${P}${k('G')}</td><td>lazygit 90%x90% (내 tmux prefix G와 동일)</td><td>popup</td></tr>
+<tr><td>${P}${k('G')}</td><td>lazygit 90%x90% (내 tmux prefix G와 동일). herdr 기본 prefix shift+g(worktree workspace 생성)를 덮어씀</td><td>popup</td></tr>
 <tr><td>${P}${k('a')}</td><td>abtop (내 tmux prefix a). popup 동작 미검증</td><td>popup</td></tr>
 <tr><td>${P}${k('shift+o')}</td><td>마지막 toast를 보낸 pane(open_notification_target)으로 점프</td><td>내장</td></tr>
 <tr><td>${P}${k('s')}</td><td>설정 화면: theme / indicators / sound / toasts / integrations 탭</td><td>기본</td></tr>
@@ -390,7 +381,7 @@ stateDiagram-v2
 <li>${T('integration','integration','integration: Claude Code hook이 소켓으로 상태를 직접 보고하는 연동. 설치 시 화면 매칭보다 정확')}(설치됨, v11)이 있으면 Claude Code hook이 상태를 직접 보고하므로 더 정확하다.</li>
 <li>롤업: blocked 에이전트 하나가 pane, tab, workspace를 모두 blocked로 표시한다. done은 볼 때까지 유지된다.</li>
 <li>sidebar agents 섹션: Claude 행은 2줄이다 (상태 아이콘, 머신, workspace, tab / Claude 세션 요약 제목). 저자 설정 <code>rows_by_agent</code>.</li>
-<li>toast: <code>ui.toast.delivery="herdr"</code>(앱 내 toast). 현재 보고 있는 tab에서는 억제된다. 소리는 평가 기간 전체 off.</li>
+<li>toast: <code>ui.toast.delivery="herdr"</code>(앱 내 toast). 현재 보고 있는 tab에서는 억제된다. 소리는 <code>ui.sound.enabled=true</code>로 켜 두었다. 상태 표시는 <code>status_indicators="symbols"</code>(아이콘 기호).</li>
 </ul>
 </details>
 `
@@ -511,6 +502,7 @@ herdr worktree remove --workspace w3 [--force]
 <li><code>herdr update</code> (brew 설치본은 <code>brew upgrade herdr</code>), <code>herdr integration status</code></li>
 <li>환경변수: <code>HERDR_ENV</code>, <code>HERDR_WORKSPACE_ID</code>, <code>HERDR_TAB_ID</code>, <code>HERDR_PANE_ID</code>, <code>HERDR_ACTIVE_PANE_CWD</code>(custom command용), <code>HERDR_SOCKET_PATH</code></li>
 <li>Claude Code에게 herdr를 다루게 하려면 <code>herdr --skill</code> 출력을 스킬로 제공한다 (HERDR_ENV=1 검사 후 CLI 사용).</li>
+<li>원격: <code>herdr --remote &lt;ssh-target&gt;</code>, <code>herdr machine &lt;subcommand&gt;</code>(저장된 SSH 머신), <code>herdr --machine &lt;label&gt; &lt;command&gt;</code>. Tailscale로 Mac mini의 herdr 세션을 MacBook·iOS(moshi)에서 동일하게 사용하는 것이 재도입 동기이다 (2026-11-07).</li>
 </ul>
 </details>
 `
@@ -526,11 +518,11 @@ herdr worktree remove --workspace w3 [--force]
       body: `
 <p><b>무엇:</b> 가이드 Step 4, 6의 평가 항목이다.</p>
 <table><thead><tr><th>구분</th><th>항목</th></tr></thead><tbody>
-<tr><td>게이트</td><td>Shift+Enter 줄바꿈(Claude Code 입력창) / 한글 IME(prefix 직후 자모 오인식 → experimental 키 3개) / snacks.image / ctrl+shift+hjkl을 Claude Code가 가로채지 않는지 / AeroSpace 창 제목</td></tr>
+<tr><td>게이트</td><td>Shift+Enter 줄바꿈(Claude Code 입력창) / 한글 IME(prefix 직후 자모 오인식 → experimental 키 3개) / snacks.image / cmd+shift+h/l이 Ghostty를 지나 herdr에 도달하는지 / AeroSpace 창 제목. <b>통과(2026-11-07):</b> ctrl+alt+hjkl pane 이동 — cat -v pane에서 <code>^[^H</code>로 도달 확인 후 prefix r 재로드로 4방향 동작</td></tr>
 <tr><td>평가 기준</td><td>goto picker가 cw를 대체하는가(키 입력 수) / AeroSpace 다중 창 vs herdr 단일 창 전환 비용 / 상태 오탐 횟수 / 재시작 후 <code>claude --resume</code> 실제 동작</td></tr>
 <tr><td>알려진 손실</td><td>vim-tmux-navigator(Neovim과 pane의 Ctrl+hjkl 통합 이동) 대체 없음 / tpm 플러그인 / cw, cj, cwq는 herdr pane에서 미동작</td></tr>
 </tbody></table>
-<p><b>왜:</b> 알려진 손실 중 vim-tmux-navigator가 일상 불편 1순위이다. prefix 없는 ctrl+shift+hjkl이 대체재 후보이다.</p>
+<p><b>왜:</b> 알려진 손실 중 vim-tmux-navigator가 일상 불편 1순위이다. herdr에는 프로세스별 pass-through가 없어(docs 확인) ctrl+hjkl을 직접 묶으면 nvim 창 이동·Backspace·Enter·clear를 잃는다. 자작안(<code>herdr pane process-info</code>로 nvim 판별 후 send-keys/focus 분기)은 키 입력마다 CLI 2~3회 호출이라 배제했고, docs 권장 chord인 ctrl+alt+hjkl을 채택했다. 진단 방법: split pane에 <code>cat -v</code>를 띄우고 <code>herdr pane read</code>로 도달 바이트를 확인한다.</p>
 `
     },
     {
@@ -540,8 +532,9 @@ herdr worktree remove --workspace w3 [--force]
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;margin:8px 0">
   <span class="hk-ok">config.toml 수정</span><span style="color:#9ca3af">→</span>
   <span class="hk-ok"><code>herdr config check</code></span><span style="color:#9ca3af">→</span>
-  <span class="hk-ok" style="background:#d1fae5;color:#047857"><code>herdr server reload-config</code> 또는 ${P}${k('r')}</span>
+  <span class="hk-ok" style="background:#d1fae5;color:#047857">TUI에서 ${P}${k('r')}</span>
 </div>
+<p style="font-size:13px"><code>herdr server reload-config</code>는 서버 측 설정만 갱신한다. 직접 chord(ctrl+alt+hjkl, cmd+shift+h/l)와 navigate 키는 클라이언트 키바인딩이므로 TUI 안에서 ${P}${k('r')}를 눌러야 반영된다 (2026-11-07 확인).</p>
 <pre class="pseudo">
 # 롤백 (브랜치 herdr-trial 사용 중이므로 가역적)
 brew uninstall herdr
@@ -575,7 +568,7 @@ const GLOSSARY = [
  {slug:'copy',term:'copy mode',desc:'pane scrollback을 키보드로 탐색·검색·선택·복사하는 모드(<code>prefix y</code> 또는 <code>[</code>). 진입 중에도 pane 프로세스는 계속 실행된다.'},
  {slug:'agent-state',term:'blocked / idle / done / working',desc:'<b>working</b> 실행 중. <b>blocked</b> 승인·질문·권한 UI가 화면 하단에 보여 입력이 필요. <b>done</b> 끝났고 아직 보지 않음. <b>idle</b> 끝났고 봤거나 대기 중. blocked가 아니면 idle로 fallback하므로 idle이 "승인해도 된다"는 뜻은 아니다. blocked 하나는 pane, tab, workspace로 롤업된다.'},
  {slug:'integration',term:'integration',desc:'Claude Code hook이 소켓으로 에이전트 상태와 세션 ID를 herdr에 직접 보고하는 연동. 화면 매칭보다 정확하고, v6+는 <code>claude --resume</code> 자동 재개를 지원한다. <code>herdr integration status</code>로 확인.'},
- {slug:'worktree',term:'worktree',desc:'git worktree. 같은 repo의 브랜치를 별도 디렉터리로 체크아웃한 작업 사본. herdr은 <code>prefix shift+g</code> 또는 <code>herdr worktree create</code>로 worktree를 만들고 workspace로 열어 부모와 그룹으로 묶는다.'},
+ {slug:'worktree',term:'worktree',desc:'git worktree. 같은 repo의 브랜치를 별도 디렉터리로 체크아웃한 작업 사본. herdr은 <code>herdr worktree create</code>로 worktree를 만들고 workspace로 열어 부모와 그룹으로 묶는다. 기본 키 <code>prefix shift+g</code>는 내 설정에서 lazygit popup이 덮어써 미바인딩이다.'},
  {slug:'pane-history',term:'pane_history',desc:'설정 옵션. true이면 pane의 마지막 출력을 <code>session-history.json</code>에 저장해 재시작 후 화면을 재생한다. 비밀값이 포함될 수 있으므로 파일 위치(<code>~/.config/herdr/</code>)와 삭제를 관리한다.'},
  {slug:'cmdtype',term:'popup / pane / shell command type',desc:'custom command의 실행 방식. <b>popup</b> 크기 지정 떠 있는 창(예: lazygit 90%x90%). <b>pane</b> 임시 pane에서 실행하고 종료 시 닫힘. <b>shell</b> 화면 없이 셸 명령만 실행(예: Finder 열기). 환경변수 <code>HERDR_ACTIVE_PANE_CWD</code>를 사용할 수 있다.'}
 ];
@@ -749,7 +742,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-document.getElementById('gen-date').textContent = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric' }) + ' 생성';
+document.getElementById('gen-date').textContent = '2026년 11월 6일 생성 · 2026년 11월 7일 갱신 (ctrl+alt pane 이동 · cmd+shift workspace 전환 · navigate j/k)';
 
 renderTOC();
 renderSections();
