@@ -319,6 +319,8 @@ ${row('sidebar 토글', P + k('b'), P + k('b'), '-')}
 <tr><td>${P}${k('g')}</td><td>lazygit (종료 시 pane 닫힘). herdr 기본 prefix g(goto)를 덮어씀 → goto는 prefix u</td><td>pane</td></tr>
 <tr><td>${P}${k('G')}</td><td>lazygit 90%x90% (내 tmux prefix G와 동일). herdr 기본 prefix shift+g(worktree workspace 생성)를 덮어씀</td><td>popup</td></tr>
 <tr><td>${P}${k('a')}</td><td>abtop (내 tmux prefix a). popup 동작 미검증</td><td>popup</td></tr>
+<tr><td>${P}${k('f')}</td><td>yazi (종료 시 pane 닫힘). prefix g lazygit와 대칭</td><td>pane</td></tr>
+<tr><td>${P}${k('F')}</td><td>yazi 90%x90%</td><td>popup</td></tr>
 <tr><td>${P}${k('shift+o')}</td><td>마지막 toast를 보낸 pane(open_notification_target)으로 점프</td><td>내장</td></tr>
 <tr><td>${P}${k('s')}</td><td>설정 화면: theme / indicators / sound / toasts / integrations 탭</td><td>기본</td></tr>
 </tbody></table>
@@ -351,6 +353,47 @@ ${row('sidebar 토글', P + k('b'), P + k('b'), '-')}
 <p>마우스: 클릭으로 pane/tab/workspace/agent 선택, 경계 드래그로 resize, 드래그 선택, 우클릭 메뉴. <code>mouse_capture=true</code>(기본). <code>copy_on_select=false</code>이므로 드래그로 선택만 되고 복사는 ${k('y')}로 한다.</p>
 <p><b>텍스트 입력창</b>(이름 변경·필터·검색)은 readline 유사: ${k('ctrl+a/e')} ${k('alt+b/f')} ${k('ctrl+w')} ${k('ctrl+u/k')} ${k('ctrl+y')}.</p>
 <p style="background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:8px 12px;font-size:13px"><b>알려진 충돌:</b> prefix가 ctrl+a이므로 shell의 줄 처음 이동 ${k('Ctrl+A')}는 사용할 수 없다. tmux의 send-prefix에 대응하는 기능은 미확인이다. Home 키가 없는 키보드이므로 zsh에서 <code>ctrl+x ctrl+a</code> 같은 대체 바인딩을 고려하거나, 평가 후 prefix를 ctrl+t(저자)로 변경하는 방안을 검토한다.</p>
+`
+    },
+    {
+      id: 's3-7', title: '3.7 플러그인 키 (file-viewer · reviewr · annotate)',
+      body: `
+<p><b>무엇:</b> <code>herdr plugin install</code>로 설치한 플러그인 3개의 키이다. 모두 <code>type = "plugin_action"</code>이고 command는 <code>&lt;plugin id&gt;.&lt;action id&gt;</code> 형식이다. 설치 확인은 <code>herdr plugin list</code>.</p>
+<p><b>왜 이 키인가:</b> README 기본 키가 내 설정과 충돌하는 경우 prefix 아래 빈 키로 옮겼다. 충돌 검사는 <code>herdr --default-config</code>와 내 config의 <code>"prefix+…"</code>를 대조한다. prefix가 ctrl+a이므로 <code>prefix+ctrl+a</code>는 예약(두 번 누르면 literal ctrl+a 전송)이라 사용할 수 없다 — <code>herdr config check</code>가 "reserved keybinding"으로 알려 준다.</p>
+
+<h4>herdr-file-viewer (smarzban) — 읽기 전용 git-aware 파일 뷰어</h4>
+<table><thead><tr><th>키</th><th>동작</th><th>action</th></tr></thead><tbody>
+<tr><td>${P}${k('v')}</td><td>file viewer를 split pane으로 열기 (prefix f는 yazi)</td><td><code>herdr-file-viewer.open-file-viewer</code></td></tr>
+<tr><td>${P}${k('V')}</td><td>file viewer를 새 tab으로 열기</td><td><code>herdr-file-viewer.open-file-viewer-tab</code></td></tr>
+</tbody></table>
+
+<h4>reviewr (persiyanov.reviewr) — 에이전트 diff를 채팅 옆에서 리뷰하고 라인 코멘트를 에이전트 입력창으로 전송</h4>
+<table><thead><tr><th>키</th><th>동작</th><th>action</th></tr></thead><tbody>
+<tr><td>${P}${k('i')}</td><td>reviewr pane 토글. README 권장 cmd+r 대신 다른 pane 도구와 같이 prefix 아래에 둠(prefix r은 reload_config)</td><td><code>persiyanov.reviewr.toggle</code></td></tr>
+</tbody></table>
+<p>pane 안 주요 키: ${k('u/b/t/g')} scope(uncommitted / branch / last turn / commits) · ${k(']')}${k('[')} 다음·이전 change · ${k('Tab')} 목록↔diff · ${k('v')} 라인 선택 → ${k('c')} 코멘트 → ${k('s')} 에이전트에 전송 · ${k('|')} unified↔split · ${k('3')} PR 탭 · ${k('?')} 전체 키.
+hunk와의 관계: 사용자→Claude 방향(내가 diff를 읽고 지시)은 reviewr가 빠르다. Claude→사용자 방향(Claude가 diff 위에 결정 질문 코멘트를 남기는 <code>hunk-review-decisions</code>)은 reviewr에 agent용 CLI·소켓이 없어 불가하므로 hunk를 유지한다.</p>
+
+<h4>annotate lite (plannotator/herdr-annotate/lite) — 터미널 선택 텍스트에 코멘트를 달고 에이전트 컨텍스트로 보냄</h4>
+<table><thead><tr><th>키</th><th>동작</th><th>action</th><th>README 기본</th></tr></thead><tbody>
+<tr><td>${P}${k('t')}</td><td>선택한 텍스트에 코멘트 (popover, ${k('ctrl+s')} 저장)</td><td><code>annotate.capture</code></td><td>prefix a → abtop과 충돌</td></tr>
+<tr><td>${P}${k('A')}</td><td>모든 annotation을 Markdown으로 클립보드 복사</td><td><code>annotate.copy-context</code></td><td>동일</td></tr>
+<tr><td>${P}${k('ctrl+t')}</td><td>복사 후 archive</td><td><code>annotate.copy-archive</code></td><td>prefix ctrl+a → prefix 예약</td></tr>
+<tr><td>${P}${k('ctrl+v')}</td><td>focus된 에이전트 입력창에 붙여넣기(전송 안 함) 후 archive</td><td><code>annotate.paste-archive</code></td><td>동일</td></tr>
+<tr><td>${P}${k('ctrl+s')}</td><td>focus된 에이전트의 다음 메시지로 전송 후 archive</td><td><code>annotate.send-archive</code></td><td>동일</td></tr>
+<tr><td>${P}${k('M')}</td><td>annotation 관리자 (${k('Enter')} 출처 pane으로 점프, ${k('e')} 편집, ${k('y')}/${k('c')} 복사, ${k('Tab')} archive 목록)</td><td><code>annotate.manage</code></td><td>prefix m → zoom과 충돌</td></tr>
+</tbody></table>
+
+<p style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:13px"><b>설치 실패 원인과 우회 (2026-11-08):</b> <code>herdr plugin install plannotator/herdr-annotate/lite</code>가 build 단계에서 <code>curl: (56) The requested URL returned error: 504</code>로 실패했다. 플러그인의 build hook(<code>scripts/fetch-herdr-annotate.sh</code>)이 <code>github.com/&lt;owner&gt;/&lt;repo&gt;/releases/download/…</code>에서 바이너리를 받는데, 이 URL이 GitHub의 koreacentral edge에서 504를 반환했다(gh CLI 자체 release 등 모든 releases/download URL 동일, 로컬 proxy 없음). 플러그인·herdr의 문제가 아니다.
+<br>우회: 같은 asset을 GitHub API 경로(<code>api.github.com</code>)로 받으면 성공한다. fetch 스크립트가 <code>HERDR_ANNOTATE_BIN</code> 환경변수로 로컬 바이너리를 받아들이므로 아래처럼 설치한다. 받은 파일의 SHA-256은 release의 <code>SHA256SUMS</code>와 대조한다.</p>
+<pre><code>gh release download rust-lite-v0.2.3 -R plannotator/herdr-annotate \
+  -p herdr-annotate-aarch64-apple-darwin -p SHA256SUMS -D /tmp/annotate
+shasum -a 256 /tmp/annotate/herdr-annotate-aarch64-apple-darwin   # SHA256SUMS와 비교
+chmod +x /tmp/annotate/herdr-annotate-aarch64-apple-darwin
+HERDR_ANNOTATE_BIN=/tmp/annotate/herdr-annotate-aarch64-apple-darwin \
+  herdr plugin install --yes plannotator/herdr-annotate/lite
+herdr plugin list   # annotate (Annotate) enabled 확인</code></pre>
+<p style="font-size:13px">버전 태그는 repo의 <code>herdr-annotate.version</code>(현재 0.2.3)을 따른다. 504가 해소되면 환경변수 없이 공식 명령만으로 설치된다. <code>--yes</code>는 비대화형 셸(스크립트·에이전트)에서만 필요하다.</p>
 `
     }
   ]
