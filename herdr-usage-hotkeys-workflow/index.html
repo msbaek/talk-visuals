@@ -375,14 +375,15 @@ ${row('sidebar 토글', P + k('b'), P + k('b'), '-')}
 hunk와의 관계: 사용자→Claude 방향(내가 diff를 읽고 지시)은 reviewr가 빠르다. Claude→사용자 방향(Claude가 diff 위에 결정 질문 코멘트를 남기는 <code>hunk-review-decisions</code>)은 reviewr에 agent용 CLI·소켓이 없어 불가하므로 hunk를 유지한다.</p>
 
 <h4>annotate lite (plannotator/herdr-annotate/lite) — 터미널 선택 텍스트에 코멘트를 달고 에이전트 컨텍스트로 보냄</h4>
-<table><thead><tr><th>키</th><th>동작</th><th>action</th><th>README 기본</th></tr></thead><tbody>
-<tr><td>${P}${k('t')}</td><td>선택한 텍스트에 코멘트 (popover, ${k('ctrl+s')} 저장)</td><td><code>annotate.capture</code></td><td>prefix a → abtop과 충돌</td></tr>
-<tr><td>${P}${k('A')}</td><td>모든 annotation을 Markdown으로 클립보드 복사</td><td><code>annotate.copy-context</code></td><td>동일</td></tr>
-<tr><td>${P}${k('ctrl+t')}</td><td>복사 후 archive</td><td><code>annotate.copy-archive</code></td><td>prefix ctrl+a → prefix 예약</td></tr>
-<tr><td>${P}${k('ctrl+v')}</td><td>focus된 에이전트 입력창에 붙여넣기(전송 안 함) 후 archive</td><td><code>annotate.paste-archive</code></td><td>동일</td></tr>
-<tr><td>${P}${k('ctrl+s')}</td><td>focus된 에이전트의 다음 메시지로 전송 후 archive</td><td><code>annotate.send-archive</code></td><td>동일</td></tr>
-<tr><td>${P}${k('M')}</td><td>annotation 관리자 (${k('Enter')} 출처 pane으로 점프, ${k('e')} 편집, ${k('y')}/${k('c')} 복사, ${k('Tab')} archive 목록)</td><td><code>annotate.manage</code></td><td>prefix m → zoom과 충돌</td></tr>
+<table><thead><tr><th>키</th><th>동작</th><th>action</th><th>README 기본</th><th>상태</th></tr></thead><tbody>
+<tr><td>${P}${k('t')}</td><td>선택한 텍스트에 코멘트 (popover, ${k('ctrl+s')} 저장)</td><td><code>annotate.capture</code></td><td>prefix a → abtop과 충돌</td><td>활성</td></tr>
+<tr><td>${P}${k('A')}</td><td>모든 annotation을 Markdown으로 클립보드 복사</td><td><code>annotate.copy-context</code></td><td>동일</td><td>미바인딩(주석)</td></tr>
+<tr><td>${P}${k('ctrl+t')}</td><td>복사 후 archive</td><td><code>annotate.copy-archive</code></td><td>prefix ctrl+a → prefix 예약</td><td>미바인딩(주석)</td></tr>
+<tr><td>${P}${k('ctrl+v')}</td><td>focus된 에이전트 입력창에 붙여넣기(전송 안 함) 후 archive</td><td><code>annotate.paste-archive</code></td><td>동일</td><td>활성</td></tr>
+<tr><td>${P}${k('ctrl+s')}</td><td>focus된 에이전트의 다음 메시지로 전송 후 archive</td><td><code>annotate.send-archive</code></td><td>동일</td><td>미바인딩(주석)</td></tr>
+<tr><td>${P}${k('M')}</td><td>annotation 관리자 (${k('Enter')} 출처 pane으로 점프, ${k('e')} 편집, ${k('y')}/${k('c')} 복사, ${k('Tab')} archive 목록)</td><td><code>annotate.manage</code></td><td>prefix m → zoom과 충돌</td><td>미바인딩(주석)</td></tr>
 </tbody></table>
+<p><b>미바인딩 4키(2026-11-08):</b> config.toml에 주석 처리된 채 커밋됐다(dotfiles 9915a99). 표의 키는 충돌 회피 후보이며 사용 빈도를 본 뒤 활성화한다. 활성화는 주석 해제 → <code>herdr config check</code> → ${P}${k('r')}.</p>
 
 <p style="background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:13px"><b>설치 실패 원인과 우회 (2026-11-08):</b> <code>herdr plugin install plannotator/herdr-annotate/lite</code>가 build 단계에서 <code>curl: (56) The requested URL returned error: 504</code>로 실패했다. 플러그인의 build hook(<code>scripts/fetch-herdr-annotate.sh</code>)이 <code>github.com/&lt;owner&gt;/&lt;repo&gt;/releases/download/…</code>에서 바이너리를 받는데, 이 URL이 GitHub의 koreacentral edge에서 504를 반환했다(gh CLI 자체 release 등 모든 releases/download URL 동일, 로컬 proxy 없음). 플러그인·herdr의 문제가 아니다.
 <br>우회: 같은 asset을 GitHub API 경로(<code>api.github.com</code>)로 받으면 성공한다. fetch 스크립트가 <code>HERDR_ANNOTATE_BIN</code> 환경변수로 로컬 바이너리를 받아들이므로 아래처럼 설치한다. 받은 파일의 SHA-256은 release의 <code>SHA256SUMS</code>와 대조한다.</p>
