@@ -356,10 +356,19 @@ ${row('sidebar 토글', P + k('b'), P + k('b'), '-')}
 `
     },
     {
-      id: 's3-7', title: '3.7 플러그인 키 (file-viewer · reviewr · annotate)',
+      id: 's3-7', title: '3.7 플러그인 키 (file-viewer · reviewr · annotate · navigator · automatic-rename)',
       body: `
-<p><b>무엇:</b> <code>herdr plugin install</code>로 설치한 플러그인 3개의 키이다. 모두 <code>type = "plugin_action"</code>이고 command는 <code>&lt;plugin id&gt;.&lt;action id&gt;</code> 형식이다. 설치 확인은 <code>herdr plugin list</code>.</p>
+<p><b>무엇:</b> <code>herdr plugin install</code>로 설치한 플러그인 5개의 키이다. 모두 <code>type = "plugin_action"</code>이고 command는 <code>&lt;plugin id&gt;.&lt;action id&gt;</code> 형식이다. 설치 확인은 <code>herdr plugin list</code>.</p>
 <p><b>왜 이 키인가:</b> README 기본 키가 내 설정과 충돌하는 경우 prefix 아래 빈 키로 옮겼다. 충돌 검사는 <code>herdr --default-config</code>와 내 config의 <code>"prefix+…"</code>를 대조한다. prefix가 ctrl+a이므로 <code>prefix+ctrl+a</code>는 예약(두 번 누르면 literal ctrl+a 전송)이라 사용할 수 없다 — <code>herdr config check</code>가 "reserved keybinding"으로 알려 준다.</p>
+
+<h4>herdr-navigator (thanhdat77) — workspace·agent·session·directory를 fuzzy 하나로 점프</h4>
+<table><thead><tr><th>키</th><th>동작</th><th>action</th><th>README 기본</th></tr></thead><tbody>
+<tr><td>${P}${k('p')}</td><td>navigator 열기(이미 열려 있으면 focus). 입력 → ${k('Enter')}로 focus·create·attach 자동 판별. cw/cwq(tmux 세션 점프) 대체</td><td><code>herdr-navigator.open</code></td><td>prefix t → annotate.capture와 충돌</td></tr>
+</tbody></table>
+<p>설치: <code>herdr plugin install --yes thanhdat77/herdr-navigator --ref v0.3.3</code> (2026-11-08). 키 추가 후 클라이언트 ${P}${k('r')} 필요(<code>server reload-config</code>는 서버만).</p>
+
+<h4>herdr-automatic-rename (qu8n) — tab 이름을 foreground 프로세스 또는 agent 세션 맥락으로 자동 지정</h4>
+<p>키 없음. 플러그인 이벤트 + zsh hook(<code>~/.zsh.after/herdr-automatic-rename.zsh</code>, <code>.zshrc</code>에서 source)으로 동작한다. tmux <code>automatic-rename</code>·<code>set-titles</code> 대체. 설치: <code>herdr plugin install --yes qu8n/herdr-automatic-rename</code> (2026-11-08). 의존성 jq·bash.</p>
 
 <h4>herdr-file-viewer (smarzban) — 읽기 전용 git-aware 파일 뷰어</h4>
 <table><thead><tr><th>키</th><th>동작</th><th>action</th></tr></thead><tbody>
